@@ -281,9 +281,9 @@ firewall {
 }
 {% set vlans = [] %}
 {% for interface in device.interfaces.filter() %}
-    {% for vlan in interface.tagged_vlans %}
+    {% for vlan in interface.tagged_vlans.all() %}
         {% if vlan not in vlans %}
-            {% set _ = vlans.append(vlan) %}
+            {% do vlans.append(vlan) %}
         {% endif %}
     {% endfor %}
 {% endfor %}
