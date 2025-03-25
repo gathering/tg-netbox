@@ -11,5 +11,5 @@ resource "netbox_config_template" "junos_non_els" {
   name               = each.key
   description        = "Template file loaded from github.com/gathering/tg25-netbox"
   template_code      = each.value
-  environment_params = jsonencode({ trim_blocks = true, lstrip_blocks = true })
+  environment_params = jsonencode({extensions=["jinja2.ext.do"], trim_blocks = true, lstrip_blocks = true })
 }
