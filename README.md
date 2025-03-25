@@ -2,7 +2,16 @@
 
 Dette repoet setter opp basisen i Netbox, og her bor også templates.
 
-Testing av templates gjøres slik:
+## Deploy templates
+
+Terraform brukes for å holde config templates up to date i netbox.
+
+```shell
+terraform apply
+```
+
+## Testing av templates
+
 
 Installer python avhengigheter
 
