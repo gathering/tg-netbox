@@ -279,12 +279,21 @@ firewall {
         }
     }
 }
+{% set vlans = [] %}
+{% for interface in device.interfaces.filter() %}
+    {% for vlan in interface.tagged_vlans %}
+        {% if vlan not in vlans %}
+            {% set _ = vlans.append(vlan) %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
 ethernet-switching-options {
     secure-access-port {
         interface edge-ports {
             no-dhcp-trusted;
         }
-        vlan {{ vlan_name }} {
+{% for vlan in vlans if not vlan.name == "juniper-mgmt" %}
+        vlan {{ vlan.name }} {
             arp-inspection;
             examine-dhcp;
             examine-dhcpv6;
@@ -317,15 +326,14 @@ ethernet-switching-options {
             multicast;
         }
     }
+{% endfor %}
 }
 vlans {
-    {{ vlan_name }} {
-        vlan-id {{ vlan_id }};
+{% for vlan in vlans %}
+    {{ vlan.name }} {
+        vlan-id {{ vlan.vid }};
     }
-    edge-mgmt {
-        vlan-id 666;
-        l3-interface vlan.666;
-    }
+{% endfor %}
 }
 poe {
     interface all;
