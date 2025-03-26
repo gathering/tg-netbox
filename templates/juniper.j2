@@ -114,7 +114,7 @@ interfaces {
 {% for interface in device.interfaces.filter(type="1000base-t") %}
     {{ interface.name }} {
     {% if interface.description %}
-        description: {{ interface.description }}
+        description "{{ interface.description }}";
     {% endif %}
     {% if interface.lag %}
         ether-options {
@@ -143,7 +143,7 @@ interfaces {
 {% for interface in device.interfaces.filter(type="lag") %}
     {{ interface.name }} {
     {% if interface.description %}
-        description: {{ interface.description }}
+        description "{{ interface.description }}";
     {% endif %}
         unit 0 {
             family ethernet-switching {
@@ -155,7 +155,7 @@ interfaces {
     {% elif interface.mode.value == "tagged" %}
             port-mode trunk;
             vlan {
-                members [{% for vlan in interface.tagged_vlans %} {{ vlan.name }} {% endfor -%}]
+                members [{% for vlan in interface.tagged_vlans %} {{ vlan.name }} {% endfor -%}];
                 }
     {% endif %}
         }
@@ -165,7 +165,7 @@ interfaces {
 {% for interface in device.interfaces.filter(type="virtual") %}
     {{ interface.name }} {
     {% if interface.description %}
-        description: {{ interface.description }}
+        description "{{ interface.description }}";
     {% endif %}
     }
 {% endfor %}
