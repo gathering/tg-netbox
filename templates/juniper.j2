@@ -1,115 +1,5 @@
-system {
-    host-name {{ device.name }};
-    auto-snapshot;
-    domain-name {{ domainName }};
-    time-zone Europe/Oslo;
-    /* tacacs primary, failbacks to local users */
-    authentication-order tacplus;
-    ports {
-        console log-out-on-disconnect;
-    }
-    root-authentication {
-        encrypted-password "{{ hashes.handle_root }}";
-    }
-    name-server {
-{% for server in nameServers %}
-        {{ server }};
-{% endfor %}
-    }
-    tacplus-server {
-{% for server in tacacsServers %}
-        {{ server }} {
-            secret "{{ hashes.tacacs }}";
-        }
-{% endfor %}
-    }
-    login {
-        user api {
-            uid 2000;
-            class super-user;
-            authentication {
-                ssh-ed25519 "{{ hashes.handle_api }}";
-            }
-        }
-        user tech {
-            uid 2001;
-            class super-user;
-            authentication {
-                encrypted-password "{{ hashes.handle_tech }}";
-            }
-        }
-    }
-    services {
-        ssh {
-            root-login deny;
-            no-tcp-forwarding;
-            protocol-version v2;
-            client-alive-count-max 2;
-            client-alive-interval 300;
-            connection-limit 50;
-            rate-limit 5;
-        }
-        netconf {
-            ssh {
-                port 830;
-            }
-        }
-    }
-    syslog {
-        user * {
-            any emergency;
-        }
-        host log.{{ domainName }} {
-            any warning;
-            authorization info;
-            daemon warning;
-            user warning;
-            change-log any;
-            interactive-commands any;
-            match "!(.*License.*)";
-            allow-duplicates;
-            facility-override local7;
-            explicit-priority;
-        }
-        /* Oxidized syslog */
-{% for server in oxidizedServers %}
-        host {{ server }} {
-            interactive-commands notice;
-            match UI_COMMIT_COMPLETED;
-        }
-{% endfor %}
-        /* Local logging of syslog messages */
-        file messages {
-            any notice;
-            authorization info;
-            /* Fjerner mye graps i loggene */
-            match "!(.*License.*|.*EX-BCM PIC.*|.*mojito_i2c_read.*|.*qsfp_tk_read_mem_page.*)";
-        }
-        /* Local logging of all user-commands typed in the CLI */
-        file interactive-commands {
-            interactive-commands any;
-            match "UI_CMDLINE_READ_LINE|UI_COMMIT_COMPLETED";
-        }
-    }
-    commit synchronize;
-    ntp {
-{% for server in ntpServers %}
-        {{ server }};
-{% endfor %}
-    }
-}
-chassis {
-    aggregated-devices {
-        ethernet {
-            device-count 32;
-        }
-    }
-    alarm {
-        management-ethernet {
-            link-down ignore;
-        }
-    }
-}
+{% include 'juniper-global.j2' %}
+
 interfaces {
 {% for interface in device.interfaces.filter(type="1000base-t") %}
     {{ interface.name }} {
@@ -169,26 +59,7 @@ interfaces {
     {% endif %}
     }
 {% endfor %}
-snmp {
-    contact "{{ SNMP.contact }}";
-    location "{{ SNMP.location }}";
-    community {{ SNMP.community }} {
-        authorization read-only;
-        client-list-name mgmt;
-    }
-}
-routing-options {
-    rib inet.0 {
-        static {
-            route 0.0.0.0/0 next-hop {{ v4_mgmt_nexthop }};
-        }
-    }
-    rib inet6.0 {
-        static {
-            route ::/0 next-hop {{ v6_mgmt_nexthop }};
-        }
-    }
-}
+
 protocols {
     igmp-snooping {
         vlan all {
@@ -212,71 +83,7 @@ protocols {
     lldp {
         port-id-subtype interface-name;
         port-description-type interface-description;
-        interface uplink-ports;
-    }
-}
-policy-options {
-    prefix-list mgmt-v4 {
-	{% for x in mgmt_addresses_v4 %}
-        {{ x }}:
-    {% endfor %}
-    }
-    prefix-list mgmt-v6 {
-	{% for x in mgmt_addresses_v6 %}
-        {{ x }}:
-    {% endfor %}
-    }
-    /* Merged separate v4- og v6-lister */
-    prefix-list mgmt {
-        apply-path "policy-options prefix-list <mgmt-v*> <*>";
-    }
-}
-firewall {
-    family inet {
-        filter mgmt-v4 {
-            term accept-ssh {
-                from {
-                    source-prefix-list {
-                        mgmt-v4;
-                    }
-                    destination-port 22;
-                }
-                then accept;
-            }
-            term discard-ssh {
-                from {
-                    destination-port 22;
-                }
-                then {
-                    discard;
-                }
-            }
-            term accept-all {
-                then accept;
-            }
-        }
-    }
-    family inet6 {
-        filter mgmt-v6 {
-            term accept-ssh {
-                from {
-                    source-prefix-list {
-                        mgmt-v6;
-                    }
-                    destination-port 22;
-                }
-                then accept;
-            }
-            term discard-ssh {
-                from {
-                    destination-port 22;
-                }
-                then discard;
-            }
-            term accept-all {
-                then accept;
-            }
-        }
+        interface uplink-ports; ## TODO
     }
 }
 {% set vlans = [] %}
@@ -334,7 +141,4 @@ vlans {
         vlan-id {{ vlan.vid }};
     }
 {% endfor %}
-}
-poe {
-    interface all;
 }
