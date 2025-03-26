@@ -5,6 +5,7 @@ Dette repoet setter opp basisen i Netbox, og her bor også templates.
 ## Requriements
 
 ```
+- Bitwarden cli - for å hente secrets fra vaultwarden
 - Direnv - for å laste inn hemligheter i environment
 - Terraform - for å kjøre terraform
 - Python3 - for å kjøre test av templates
