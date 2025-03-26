@@ -208,25 +208,38 @@ poe {
     interface all;
 }
 
-{% set prefix_v4 = Prefix.objects.filter(vrf_id=device.primary_ip4.vrf.id, within_include=device.primary_ip4.address) %}
-{% set prefix_v6 = Prefix.objects.filter(vrf_id=device.primary_ip4.vrf.id, within_include=device.primary_ip6.address) %}
+{#
+{% set prefix_v4 = ipam.Prefix.objects.filter(vrf_id=device.primary_ip4.vrf.id, prefix__net_contains_or_equals=device.primary_ip4.address)[0] %}
+{% set prefix_v6 = ipam.Prefix.objects.filter(vrf_id=device.primary_ip4.vrf.id, prefix__net_contains_or_equals=device.primary_ip6.address)[0] %}
 
-{% set last_octet = prefix_v4.prefix.split('.')[3].split('/')[0] | int %}
+# replace with within_include to use API
+#}
+
+
+{# TODO, we should try to add ipaddr filter to netbox jinja to get this neater #}
+{#
+{% set prefix_v4_string = prefix_v4.prefix | string %}
+{% set prefix_v4_split = prefix_v4_string.split('.') %}
+
+{% set last_octet = prefix_v4_split[3].split('/')[0] | int %}
 {% set gw_octet = last_octet + 1 %}
 
-{% set v6_prefix_subnet, last_segment = prefix_v6.prefix[:-3], prefix_v6.prefix[-3:-1] %}
-{% set v6_gateway_bits = last_segment | int() + 1 %}
+{% set replaced = prefix_v6.prefix | replace('/', ':') | replace('::', ':0:') %}
+{% set parts = replaced.split(':') %}
+{% set v6_prefix_subnet = parts[:-1] | join(':') %}
+{% set last_segment = parts[-1] | int() %}
+{% set v6_gateway_bits = last_segment + 1 %}
+#}
 
-{{ prefix_v4 }}
 routing-options {
     rib inet.0 {
         static {
-            route 0.0.0.0/0 next-hop {{ prefix_v4.prefix.split('.')[0] }}.{{ prefix_v4.prefix.split('.')[1] }}.{{ prefix_v4.prefix.split('.')[2] }}.{{ gw_octet }}/{{ prefix_v4.prefix.split('/')[1] }};
+            route 0.0.0.0/0 next-hop 185.110.149.1/25;
         }
     }
     rib inet6.0 {
         static {
-            route ::/0 next-hop {{ v6_prefix_subnet }}{{ '%x' % v6_gateway_bits }}/64;
+            route ::/0 next-hop 2a06:5841:f:0:41/64;
         }
     }
 }
