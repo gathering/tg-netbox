@@ -35,6 +35,10 @@ def main():
     template_str = template_str.replace("Prefix.objects.filter", "prefix_objects_filter")
     template_str = template_str.replace(".all()", "")
 
+    # Netbox needs interface.type, we need interface.type.value
+    template_str = template_str.replace(".type", ".type.value")
+    template_str = template_str.replace(".mode", ".mode.value")
+
     loader = FileSystemLoader('../templates/')
     env = Environment(loader=loader, extensions=['jinja2.ext.do'], trim_blocks=True, lstrip_blocks=True)
     env.globals['device_interfaces_filter'] = device_interface_filter
@@ -55,7 +59,8 @@ def device_interface_filter(**kwargs):
     device = nb.dcim.devices.get(name=DEVICE_NAME)
     if not device:
         exit(f"Could not find device with name {DEVICE_NAME}")
-    return list(nb.dcim.interfaces.filter(device_id=device.id, **kwargs))
+    ifs = list(nb.dcim.interfaces.filter(device_id=device.id, **kwargs))
+    return ifs
 
 
 def prefixes_filter(**kwargs):
