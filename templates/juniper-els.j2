@@ -1,0 +1,69 @@
+{% include 'juniper-global.j2' %}
+
+interfaces {
+{% for interface in device.interfaces.filter() %}
+    {% if interface.type not in ["1000base-t", "lag", "virtual"] %}
+    {% else %}
+    {{ interface.name }} {
+    {% if interface.description %}
+        description "{{ interface.description }}";
+    {% endif %}
+    {% if interface.lag %}
+        ether-options {
+            802.3ad {{ interface.lag.name }};
+        }
+    {% else %}
+        unit 0 {
+        {% if interface.count_ipaddresses > 0 %}
+            family inet {
+                filter {
+                    input mgmt-v4;
+                }
+                address TODO;
+            family inet6 {
+                filter {
+                    input mgmt-v4;
+                }
+                address TODO;
+            }
+        {% elif interface.mode == "access" %}
+            family ethernet-switching {
+                interface-mode access;
+                vlan {
+                    members {{ interface.untagged_vlan.name }};
+                }
+            }
+        {% elif interface.mode == "tagged" %}
+            family ethernet-switching {
+                interface-mode trunk;
+                vlan {
+                    members [ {% for vlan in interface.tagged_vlans.all() %}{{ vlan.name }} {% endfor -%} ];
+                }
+            }
+        {% endif %}
+        }
+    {% endif %}
+    }
+    {% endif %}
+{% endfor %}
+}
+
+
+{% set vlans = [] %}
+{% for interface in device.interfaces.filter() %}
+    {% for vlan in interface.tagged_vlans.all() %}
+        {% if vlan not in vlans %}
+            {% do vlans.append(vlan) %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+vlans {
+{% for vlan in vlans %}
+    {{ vlan.name }} {
+        vlan-id {{ vlan.vid }};
+    {% if vlan.name == "juniper-mgmt" %}
+        l3-interface irb.{{ vlan.vid }};
+    {% endif %}
+    }
+{% endfor %}
+}

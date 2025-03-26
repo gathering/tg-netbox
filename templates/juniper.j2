@@ -1,7 +1,9 @@
 {% include 'juniper-global.j2' %}
 
 interfaces {
-{% for interface in device.interfaces.filter(type="1000base-t") %}
+{% for interface in device.interfaces.filter() %}
+    {% if interface.type not in ["1000base-t", "lag", "virtual"] %}
+    {% else %}
     {{ interface.name }} {
     {% if interface.description %}
         description "{{ interface.description }}";
@@ -12,55 +14,83 @@ interfaces {
         }
     {% else %}
         unit 0 {
+        {% if interface.count_ipaddresses > 0 %}
+            family inet {
+                filter {
+                    input mgmt-v4;
+                }
+                address TODO;
+            family inet6 {
+                filter {
+                    input mgmt-v4;
+                }
+                address TODO;
+            }
+        {% elif interface.mode == "access" %}
             family ethernet-switching {
-        {% if interface.mode.value == "access" %}
                 port-mode access;
                 vlan {
                     members {{ interface.untagged_vlan.name }};
                 }
-        {% elif interface.mode.value == "tagged" %}
+            }
+        {% elif interface.mode == "tagged" %}
+            family ethernet-switching {
                 port-mode trunk;
                 vlan {
-                    members {{ interface.tagged_vlans|join(',') }};
+                    members [ {% for vlan in interface.tagged_vlans.all() %}{{ vlan.name }} {% endfor -%} ];
                 }
+            }
         {% endif %}
-            }
         }
     {% endif %}
     }
-{% endfor %}
-
-{% for interface in device.interfaces.filter(type="lag") %}
-    {{ interface.name }} {
-    {% if interface.description %}
-        description "{{ interface.description }}";
     {% endif %}
-        unit 0 {
-            family ethernet-switching {
-    {% if interface.mode.value == "access" %}
-            port-mode access;
-        vlan {
-            members {{ interface.untagged_vlan.name }};
-            }
-    {% elif interface.mode.value == "tagged" %}
-            port-mode trunk;
-            vlan {
-                members [{% for vlan in interface.tagged_vlans %} {{ vlan.name }} {% endfor -%}];
+{% endfor %}
+}
+
+ethernet-switching-options {
+    storm-control {
+    {% for interface in device.interfaces.filter(type="lag") %}
+        interface {{ interface.name }};
+    {% endfor %}
+    }
+    secure-access-port {
+        vlan juniper-mgmt {
+            dhcp-option82 {
+                circuit-id {
+                    prefix hostname;
+                    use-vlan-id;
                 }
-    {% endif %}
+            }
         }
     }
-{% endfor %}
-
-{% for interface in device.interfaces.filter(type="virtual") %}
-    {{ interface.name }} {
-    {% if interface.description %}
-        description "{{ interface.description }}";
-    {% endif %}
-    }
-{% endfor %}
+}
 
 protocols {
+    rstp {
+    {% if device.role.slug == "access-switch" %}
+        bridge-priority 32k;
+    {% elif device.role.slug == "utskutt-distro" %}
+        bridge-priority 8k;
+    {% elif device.role.slug == "distro" %}
+        bridge-priority 4k;
+    {% endif %}
+        interface edge-ports {
+            edge;
+            no-root-port;
+        }
+    }
+
+    lldp {
+        port-id-subtype interface-name;
+        port-description-type interface-description;
+        {% if device.role.slug != "access-switch" %}
+        interface all;
+        {% else %}
+        {# TODO all edge interfaces #}
+        {% endif %}
+    }
+    {% if device.role.slug == "access-switch" %}
     igmp-snooping {
         vlan all {
             version 3;
@@ -73,18 +103,7 @@ protocols {
             immediate-leave;
         }
     }
-    rstp {
-        bridge-priority 32k;
-        interface edge-ports {
-            edge;
-            no-root-port;
-        }
-    }
-    lldp {
-        port-id-subtype interface-name;
-        port-description-type interface-description;
-        interface uplink-ports; ## TODO
-    }
+    {% endif %}
 }
 {% set vlans = [] %}
 {% for interface in device.interfaces.filter() %}
@@ -96,10 +115,10 @@ protocols {
 {% endfor %}
 ethernet-switching-options {
     secure-access-port {
-        interface edge-ports {
+        interface edge-ports { ## TODO find edge-ports somehow
             no-dhcp-trusted;
         }
-{% for vlan in vlans if not vlan.name == "juniper-mgmt" %}
+{% for vlan in vlans if not vlan.name == "juniper-mgmt" %} {# TOOD maybe also ignore wifi vlans #}
         vlan {{ vlan.name }} {
             arp-inspection;
             examine-dhcp;
@@ -128,7 +147,7 @@ ethernet-switching-options {
     }
     storm-control {
         action-shutdown;
-        interface edge-ports {
+        interface edge-ports {  ## TODO find edge-ports somehow
             bandwidth 20000;
             multicast;
         }
@@ -139,6 +158,9 @@ vlans {
 {% for vlan in vlans %}
     {{ vlan.name }} {
         vlan-id {{ vlan.vid }};
+    {% if vlan.name == "juniper-mgmt" %}
+        l3-interface vlan.{{ vlan.vid }};
     }
+    {% endif %}
 {% endfor %}
 }
