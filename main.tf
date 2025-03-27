@@ -7,6 +7,14 @@ terraform {
   }
 }
 
+terraform {
+  backend "azurerm" {
+    storage_account_name = "tgtech"
+    container_name       = "tfstate"
+    key                  = "tg25-netbox/terraform.state"
+  }
+}
+
 # These are read from the environment
 provider "netbox" {
   # server_url = "" NETBOX_SERVER_URL
