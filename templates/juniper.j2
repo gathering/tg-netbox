@@ -7,6 +7,23 @@
 {% endif %}
 
 interfaces {
+    interface-range edge-ports {
+{% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
+    {% if interface.mode == "access" %}
+        member {{ interface.name }};
+    {% endif %}
+{% endfor %}
+    }
+    interface-range uplink-ports {
+{% for interface in interfaces %}
+    {% if interface.lag %}
+        member {{ interface.name }};
+    {% endif %}
+{% endfor %}
+    }
+}
+
+interfaces {
 {% for interface in interfaces %}
     {% if interface.type not in ["1000base-t", "lag", "virtual"] %}
     {% else %}
@@ -59,11 +76,6 @@ interfaces {
 }
 
 ethernet-switching-options {
-    storm-control {
-    {% for interface in interfaces if interface.type == 'lag' %}
-        interface {{ interface.name }};
-    {% endfor %}
-    }
     secure-access-port {
         vlan juniper-mgmt {
             dhcp-option82 {
@@ -97,23 +109,9 @@ protocols {
         {% if device.role.slug != "access-switch" %}
         interface all;
         {% else %}
-        {# TODO all edge interfaces #}
+        interface uplink-ports;
         {% endif %}
     }
-    {% if device.role.slug == "access-switch" %}
-    igmp-snooping {
-        vlan all {
-            version 3;
-            immediate-leave;
-        }
-    }
-    mld-snooping {
-        vlan all {
-            version 2;
-            immediate-leave;
-        }
-    }
-    {% endif %}
 }
 {% set vlans = [] %}
 {% for interface in interfaces %}
@@ -125,7 +123,7 @@ protocols {
 {% endfor %}
 ethernet-switching-options {
     secure-access-port {
-        interface edge-ports { ## TODO find edge-ports somehow
+        interface edge-ports {
             no-dhcp-trusted;
         }
 {% for vlan in vlans if not vlan.name == "juniper-mgmt" %} {# TOOD maybe also ignore wifi vlans #}
@@ -157,10 +155,16 @@ ethernet-switching-options {
     }
     storm-control {
         action-shutdown;
-        interface edge-ports {  ## TODO find edge-ports somehow
+    {% if device.role.slug == "access-switch" %}
+        interface edge-ports {
             bandwidth 20000;
             multicast;
         }
+    {% else %}
+        {% for interface in interfaces if interface.type == "lag" %}
+        {{ interface }}.0
+        {% endfor %}
+    {% endif %}
     }
 {% endfor %}
 }
