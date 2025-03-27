@@ -11,7 +11,7 @@ NETBOX_URL = os.getenv("NETBOX_SERVER_URL")
 
 DEVICE_NAME = ""
 nb = ""
-debug = False
+debug = True
 
 class PreprocessedEnvironment(Environment):
     def get_template(self, name, parent=None, globals=None):
@@ -26,6 +26,7 @@ def preprocess_template(template_str):
         'ipam.Prefix.objects.filter': 'ipam_prefix_objects_filter',
         'dcim.Device.objects.filter': 'dcim_device_objects_filter',
         'dcim.Interfaces.objects.filter': 'dcim_interfaces_objects_filter',
+        'interface.ip_addresses.first()': 'device_interface_ip_addresses_filter(interface_id=interface.id)',
         '.all()': '',
         '.type': '.type.value',
         '.mode': '.mode.value'
@@ -61,6 +62,7 @@ def main():
     env.globals['dcim_interfaces_objects_filter'] = dcim_interfaces_objects_filter
     env.globals['device_primary_ip4'] = device_primary_ip(4)
     env.globals['device_primary_ip6'] = device_primary_ip(6)
+    env.globals['device_interface_ip_addresses_filter'] = device_interface_ip_addresses_filter
 
     template = env.get_template(template_file_path)
 
@@ -69,6 +71,15 @@ def main():
     config["device"] = device
 
     print(template.render(config))
+
+def device_interface_ip_addresses_filter(**kwargs):
+    if debug:
+        print(f"device_interface_ip_addresses_filter: {kwargs}")
+    addr = list(nb.ipam.ip_addresses.filter(device_id=device.id, **kwargs))
+
+    if debug:
+        print(f'{addr}')
+    return addr
 
 def device_interfaces_filter(**kwargs):
     if debug:
