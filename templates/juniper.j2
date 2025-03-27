@@ -174,7 +174,7 @@ vlans {
         vlan-id {{ vlan.vid }};
     {% if vlan.name == "juniper-mgmt" %}
         l3-interface vlan.{{ vlan.vid }};
-    }
     {% endif %}
+    }
 {% endfor %}
 }
