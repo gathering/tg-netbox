@@ -1,7 +1,13 @@
 {% include 'templates/juniper-global.j2' %}
 
+{% if device.virtual_chassis %}
+    {% set interfaces = dcim.Interfaces.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
+{% else %}
+    {% set interfaces = device.interfaces.filter() %}
+{% endif %}
+
 interfaces {
-{% for interface in device.interfaces.filter() %}
+{% for interface in interfaces %}
     {% if interface.type not in ["1000base-t", "lag", "virtual"] %}
     {% else %}
     {{ interface.name }} {
@@ -50,7 +56,7 @@ interfaces {
 
 ethernet-switching-options {
     storm-control {
-    {% for interface in device.interfaces.filter(type="lag") %}
+    {% for interface in interfaces if interface.type == 'lag' %}
         interface {{ interface.name }};
     {% endfor %}
     }
@@ -106,7 +112,7 @@ protocols {
     {% endif %}
 }
 {% set vlans = [] %}
-{% for interface in device.interfaces.filter() %}
+{% for interface in interfaces %}
     {% for vlan in interface.tagged_vlans.all() %}
         {% if vlan not in vlans %}
             {% do vlans.append(vlan) %}

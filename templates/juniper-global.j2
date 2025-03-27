@@ -208,29 +208,7 @@ poe {
     interface all;
 }
 
-{#
-{% set prefix_v4 = ipam.Prefix.objects.filter(vrf_id=device.primary_ip4.vrf.id, prefix__net_contains_or_equals=device.primary_ip4.address)[0] %}
-{% set prefix_v6 = ipam.Prefix.objects.filter(vrf_id=device.primary_ip4.vrf.id, prefix__net_contains_or_equals=device.primary_ip6.address)[0] %}
-
-# replace with within_include to use API
-#}
-
-
-{# TODO, we should try to add ipaddr filter to netbox jinja to get this neater #}
-{#
-{% set prefix_v4_string = prefix_v4.prefix | string %}
-{% set prefix_v4_split = prefix_v4_string.split('.') %}
-
-{% set last_octet = prefix_v4_split[3].split('/')[0] | int %}
-{% set gw_octet = last_octet + 1 %}
-
-{% set replaced = prefix_v6.prefix | replace('/', ':') | replace('::', ':0:') %}
-{% set parts = replaced.split(':') %}
-{% set v6_prefix_subnet = parts[:-1] | join(':') %}
-{% set last_segment = parts[-1] | int() %}
-{% set v6_gateway_bits = last_segment + 1 %}
-#}
-
+{# TODO find gateway ip #}
 routing-options {
     rib inet.0 {
         static {
@@ -239,7 +217,28 @@ routing-options {
     }
     rib inet6.0 {
         static {
-            route ::/0 next-hop 2a06:5841:f:0:41/64;
+            route ::/0 next-hop 2a06:5841:f:0:1/64;
         }
     }
 }
+
+{% if device.virtual_chassis %}
+virtual-chassis {
+    preprovisioned;
+    vcp-snmp-statistics;
+    {% for member in dcim.Device.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
+    member {{ member.vc_position }} {
+        serial-number {{ member.serial }};
+        {{ member.tags }}
+        {% if member.tags | selectattr('slug', 'equalto', 'juniper-vc-re') | list %}
+        role routing-engine;
+        {% else %}
+        role line-card;
+        {% endif %}
+        {% if member.location is defined %}
+        location {{ member.location }};
+        {% endif %}
+    }
+    {% endfor %}
+}
+{% endif %}
