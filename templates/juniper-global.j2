@@ -228,7 +228,6 @@ virtual-chassis {
     {% for member in dcim.Device.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
     member {{ member.vc_position }} {
         serial-number {{ member.serial }};
-        {{ member.tags }}
         {% if member.tags | selectattr('slug', 'equalto', 'juniper-vc-re') | list %}
         role routing-engine;
         {% else %}
