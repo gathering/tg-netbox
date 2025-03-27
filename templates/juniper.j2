@@ -21,17 +21,21 @@ interfaces {
     {% else %}
         unit 0 {
         {% if interface.count_ipaddresses > 0 %}
+            {% for ip in interface.ip_addresses.all() %}
+                {% if ip.family == 4 %}
             family inet {
                 filter {
                     input mgmt-v4;
                 }
-                address {{ dcim.Interfaces.objects.filter() }};
+                {% elif ip.family == 6 %}
             family inet6 {
                 filter {
-                    input mgmt-v4;
+                    input mgmt-v6;
                 }
-                address TODO;
+                {% endif %}
+                address {{ ip.address }};
             }
+            {% endfor %}
         {% elif interface.mode == "access" %}
             family ethernet-switching {
                 port-mode access;
