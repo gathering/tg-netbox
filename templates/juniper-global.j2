@@ -199,7 +199,16 @@ firewall {
 }
 protocols {
     igmp-snooping {
-        vlan all;
+        vlan all {
+            version 3;
+            immediate-leave;
+        }
+    }
+    mld-snooping {
+        vlan all {
+            version 2;
+            immediate-leave;
+        }
     }
 }
 

@@ -13,7 +13,6 @@ DEVICE_NAME = ""
 nb = ""
 debug = True
 
-
 class PreprocessedEnvironment(Environment):
     def get_template(self, name, parent=None, globals=None):
         template_source = self.loader.get_source(self, name)[0]
@@ -38,7 +37,6 @@ def preprocess_template(template_str):
         template_str = template_str.replace(search, replace)
 
     return template_str
-
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -75,7 +73,6 @@ def main():
 
     print(template.render(config))
 
-
 def interface_ip_addresses_all(**kwargs):
     if debug:
         print(f"interface_ip_addresses_all: {kwargs}")
@@ -86,7 +83,6 @@ def interface_ip_addresses_all(**kwargs):
     addr = list(nb.ipam.ip_addresses.filter(**kwargs))
     return addr
 
-
 def device_interfaces_filter(**kwargs):
     if debug:
         print(f"device_interfaces_filter: {kwargs}")
@@ -95,7 +91,6 @@ def device_interfaces_filter(**kwargs):
         exit(f"Could not find device with name {DEVICE_NAME}")
     ifs = list(nb.dcim.interfaces.filter(device_id=device.id, **kwargs))
     return ifs
-
 
 def ipam_prefixes_filter(**kwargs):
     if debug:
@@ -108,20 +103,17 @@ def ipam_prefixes_filter(**kwargs):
 
     return prefixes[0]
 
-
 def dcim_device_objects_filter(**kwargs):
     if debug:
         print(f"dcim_device_objects_filter: {kwargs}")
     devices = list(nb.dcim.devices.filter(**kwargs))
     return devices
 
-
 def dcim_interfaces_objects_filter(**kwargs):
     if debug:
         print(f"dcim_interfaces_objects_filter: {kwargs}")
     ifs = list(nb.dcim.interfaces.filter(**kwargs))
     return ifs
-
 
 def device_primary_ip(version):
     if version == 4:
