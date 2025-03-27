@@ -25,7 +25,7 @@ interfaces {
                 filter {
                     input mgmt-v4;
                 }
-                address TODO;
+                address {{ dcim.Interfaces.objects.filter() }};
             family inet6 {
                 filter {
                     input mgmt-v4;
