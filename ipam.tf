@@ -1,10 +1,15 @@
 resource "netbox_rir" "tg25" {
-  name       = "TG25"
+  name       = "TG25 Private"
   is_private = true
 }
 
-resource "netbox_rir" "ripe" {
-  name       = "RIPE NCC"
+resource "netbox_rir" "kandu" {
+  name       = "KANDU"
+  is_private = false
+}
+
+resource "netbox_rir" "telenor" {
+  name       = "Telenor"
   is_private = false
 }
 
@@ -18,7 +23,7 @@ locals {
     { name = "Servers" },
   ]
   as_nubmers = [
-    { asn = 21067, rir = netbox_rir.ripe, description = "KANDU" },
+    { asn = 21067, rir = netbox_rir.kandu, description = "KANDU" },
     { asn = 65100, rir = netbox_rir.tg25, description = "FABRIC BASE" },
     { asn = 65200, rir = netbox_rir.tg25, description = "FW" },
     { asn = 65210, rir = netbox_rir.tg25, description = "INET VRF" },
@@ -26,11 +31,11 @@ locals {
   ]
   aggregates = [
     { prefix = "10.0.0.0/8", description = "RFC1918", rir = netbox_rir.tg25 },
-    { prefix = "88.92.0.0/18", description = "Telenor", rir = netbox_rir.ripe },
-    { prefix = "185.110.148.0/22", description = "KANDU v4", rir = netbox_rir.ripe },
-    { prefix = "2a06:5840::/29", description = "KANDU v6", rir = netbox_rir.ripe },
-    { prefix = "193.212.22.0/30", description = "Telenor v4 linknet", rir = netbox_rir.ripe },
-    { prefix = "2001:4600:9:300::290/126", description = "Telenor v6 linknet", rir = netbox_rir.ripe },
+    { prefix = "88.92.0.0/18", description = "Telenor", rir = netbox_rir.telenor },
+    { prefix = "185.110.148.0/22", description = "KANDU v4", rir = netbox_rir.kandu },
+    { prefix = "2a06:5840::/29", description = "KANDU v6", rir = netbox_rir.kandu },
+    { prefix = "193.212.22.0/30", description = "Telenor v4 linknet", rir = netbox_rir.telenor },
+    { prefix = "2001:4600:9:300::290/126", description = "Telenor v6 linknet", rir = netbox_rir.telenor },
   ]
   vrfs = [
     { name = "default", description = "For underlay i fabricen" },
