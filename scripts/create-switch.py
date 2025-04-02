@@ -1,3 +1,5 @@
+import json
+
 from extras.scripts import *
 from django.contrib.contenttypes.models import ContentType
 
@@ -18,7 +20,6 @@ from utilities.exceptions import AbortScript
 # ✅ Edge switch on distro leaf
 # ✅ Edge switch on leaf-pair
 # ✅ Utskutt distro (nice to have)
-
 
 DEFAULT_SWITCH_NAME = "e1.test"
 DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
@@ -142,7 +143,29 @@ class CreateSwitch(Script):
     )
 
     def run(self, data, commit):
-        switch = self.create_switch(data)
+
+        switch_name = data['switch_name']
+        device_type = data['device_type']
+        device_role = data['device_role']
+        uplink_type = data['uplink_type']
+        destination_device_a = data['destination_device_a']
+        destination_device_b = data['destination_device_b']
+        destination_interfaces = data['destination_interfaces']
+
+        # workaround for Netbox discussion #18229 - if str we assume script is called from the API
+        if type(data['device_type']).__name__ == "str":
+            device_type = DeviceType.objects.get(model=data['device_type'])
+            device_role = DeviceRole.objects.get(name=data['device_role'])
+            uplink_type = [InterfaceTypeChoices.TYPE_1GE_FIXED]
+            destination_device_a = Device.objects.get(name=data['destination_device_a'])
+            if not data['destination_device_b'] == "":
+                destination_device_b = Device.objects.get(name=data['destination_device_b'])
+
+            ifs = data['destination_interfaces'].split(",")
+            destination_interfaces = Interface.objects.filter(device_id=destination_device_a.id, name__in=ifs)
+
+        self.log_debug("")
+        switch = self.create_switch(switch_name, device_type, device_role, destination_device_a)
 
         # These only exists if we are provisioning an access switch
         vlan = None
@@ -154,8 +177,8 @@ class CreateSwitch(Script):
             v4_prefix, v6_prefix = self.allocate_prefixes(vlan)
             self.set_traffic_vlan(switch, vlan)
 
-        self.connect_switch(data, switch, vlan)
-
+        self.connect_switch(switch, uplink_type, destination_device_a, destination_device_b, destination_interfaces,
+                            vlan)
         self.log_success(f"✅ Script completed successfully.")
         self.log_success(f"🔗 Switch:     <a href=\"{switch.get_absolute_url()}\">{switch}</a>")
 
@@ -164,6 +187,16 @@ class CreateSwitch(Script):
             self.log_success(f"🔗 v4 Prefix:  <a href=\"{v4_prefix.get_absolute_url()}\">{v4_prefix}</a>")
             self.log_success(f"🔗 VLAN:       <a href=\"{vlan.get_absolute_url()}\">{vlan}</a>")
         self.log_success(f"⚠️ <strong>️Fabric config must be deployed before switch can be fapped.</strong>")
+        return json.dumps(
+            {
+                "switch_name": switch.name,
+                "switch_url": switch.get_absolute_url(),
+                "network_v4": str(v4_prefix.prefix),
+                "network_v6": str(v6_prefix.prefix),
+                "switch_mgmt_v4": str(switch.primary_ip4.address),
+                "switch_mgmt_v6": str(switch.primary_ip6.address)
+            }
+        )
 
     def allocate_prefixes(self, vlan):
         v6_prefix = Prefix.objects.create(
@@ -183,10 +216,7 @@ class CreateSwitch(Script):
         self.log_info("Created network. Created new VLAN and assigned prefixes")
         return v4_prefix, v6_prefix
 
-    def connect_switch(self, data, switch, vlan=None):
-        uplink_device_a = data['destination_device_a']
-        uplink_device_b = data['destination_device_b']
-
+    def connect_switch(self, switch, uplink_types, uplink_device_a, uplink_device_b, destination_interfaces, vlan=None):
         uplink_lag_name = self.get_next_free_lag_number(uplink_device_a)
 
         switch_uplink_description = f"B: {uplink_device_a} {uplink_lag_name}"
@@ -201,7 +231,7 @@ class CreateSwitch(Script):
             mode=InterfaceModeChoices.MODE_TAGGED,
         )
         if uplink_device_a.role.slug == DEVICE_ROLE_UTSKUTT_DISTRO:
-            uplink_lag = Interface.objects.get(device=data['destination_device_a'], name="ae0")
+            uplink_lag = Interface.objects.get(device=uplink_device_a, name="ae0")
             uplink_lag.tagged_vlans.add(vlan.id)
             self.log_info(f"Added vlan to utskutt distro uplink LAG")
 
@@ -210,9 +240,8 @@ class CreateSwitch(Script):
             switch_uplink_lag.tagged_vlans.add(vlan.id)
 
         possible_uplink_types = []
-        uplink_type = data['uplink_type']
-        self.log_debug(f"uplink type {uplink_type}")
-        for type in uplink_type:
+        self.log_debug(f"uplink types {uplink_types}")
+        for type in uplink_types:
             self.log_debug(f"for type {type} - adding {UPLINK_SUPPORT_MATRIX.get(type, [])} to possible uplinks")
             possible_uplink_types.append(UPLINK_SUPPORT_MATRIX.get(type, []))
 
@@ -220,7 +249,7 @@ class CreateSwitch(Script):
         possible_uplink_types = [x for xs in possible_uplink_types for x in xs]
         self.log_debug(f"possible types {possible_uplink_types}")
 
-        uplink_interfaces = list(Interface.objects.filter(device=switch, type__in=possible_uplink_types))
+        uplink_interfaces = list(Interface.objects.filter(device_id=switch.id, type__in=possible_uplink_types))
         if len(uplink_interfaces) < 1:
             raise AbortScript(
                 f"You chose a device type without any {possible_uplink_types} interfaces! Pick another model :)")
@@ -236,7 +265,7 @@ class CreateSwitch(Script):
         if not uplink_device_b:
             uplink_device_lag = self.create_uplink_lag(switch, uplink_device_a, uplink_lag_name, vlan)
 
-        num_uplinks = len(data['destination_interfaces'])
+        num_uplinks = len(destination_interfaces)
         if uplink_device_b:
             num_uplinks = 2  # If connected to a leaf-pair, num uplinks are two
 
@@ -248,15 +277,15 @@ class CreateSwitch(Script):
                 uplink_device = uplink_device_b
 
             if uplink_device_b and uplink_num == 1:
-                uplink_ifname = data['destination_interfaces'][0].name
+                uplink_ifname = destination_interfaces[0].name
                 uplink_device_interface = Interface.objects.get(device=uplink_device_b, name=uplink_ifname)
             else:
-                uplink_device_interface = data['destination_interfaces'][uplink_num]
+                uplink_device_interface = destination_interfaces[uplink_num]
 
             uplink_device_interface.description = f'G: {switch.name} {switch_uplink_interface.name} ({uplink_lag_name})'
             uplink_device_interface.save()
 
-            switch_uplink_interface.description = f"G: {data['destination_device_a'].name} {uplink_device_interface.name} (ae0)"
+            switch_uplink_interface.description = f"G: {uplink_device_a.name} {uplink_device_interface.name} (ae0)"
             switch_uplink_interface.lag = switch_uplink_lag
             switch_uplink_interface.save()
 
@@ -300,16 +329,15 @@ class CreateSwitch(Script):
         next_free = max(lag_numbers) + 1
         return f"{lag_prefix}{next_free}"
 
-    def create_switch(self, data):
-        switch_name = data['switch_name']
+    def create_switch(self, switch_name, device_type, device_role, destination_device_a):
         if switch_name == DEFAULT_SWITCH_NAME:
             switch_name = f"e1.test-{''.join(random.sample(string.ascii_uppercase * 6, 6))}"
 
         switch = Device(
             name=switch_name,
-            device_type=data['device_type'],
-            location=data['destination_device_a'].location,
-            role=data['device_role'],
+            device_type=device_type,
+            location=destination_device_a.location,
+            role=device_role,
             site=DEFAULT_SITE
         )
         switch.save()
