@@ -25,7 +25,30 @@ interfaces {
 
 interfaces {
 {% for interface in interfaces %}
-    {% if interface.type not in ["1000base-t", "lag", "virtual"] %}
+    {% if interface.type not in ["1000base-t", "lag"] %}
+    {% elif interface.type in ["virtual"] %}
+    {
+        {% if interface.description %}
+            description "{{ interface.description }}";
+        {% endif %}
+        {% if interface.count_ipaddresses > 0 %}
+            {% for ip in interface.ip_addresses.all() %}
+                {% if ip.family == 4 %}
+            family inet {
+                filter {
+                    input mgmt-v4;
+                }
+                {% elif ip.family == 6 %}
+            family inet6 {
+                filter {
+                    input mgmt-v6;
+                }
+                {% endif %}
+                address {{ ip.address }};
+            }
+            {% endfor %}
+        {% endif %}
+    }
     {% else %}
     {{ interface.name }} {
     {% if interface.description %}
@@ -36,9 +59,7 @@ interfaces {
             802.3ad {{ interface.lag.name }};
         }
     {% else %}
-    {% if "vlan" not in interface.name %}
         unit 0 {
-    {% endif %}
         {% if interface.count_ipaddresses > 0 %}
             {% for ip in interface.ip_addresses.all() %}
                 {% if ip.family == 4 %}
@@ -70,9 +91,7 @@ interfaces {
                 }
             }
         {% endif %}
-        {% if "vlan" not in interface.name %}
-            }
-        {% endif %}
+        }
     {% endif %}
     }
     {% endif %}
