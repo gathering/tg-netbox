@@ -315,9 +315,15 @@ class CreateSwitch(Script):
                 f"Connected: {uplink_device} - {uplink_device_interface} to {switch} - {switch_uplink_interface}")
 
     def get_next_free_lag_number(self, uplink_device_a):
-        existing_lag_names = [x.name for x in list(
-            Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))]
+        interfaces = []
+        if uplink_device_a.virtual_chassis != None:
+            interfaces = list(
+                Interface.objects.filter(device_id=uplink_device_a.virtual_chassis.master.id,
+                                         type=InterfaceTypeChoices.TYPE_LAG))
+        else:
+            interfaces = list(Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))
 
+        existing_lag_names = [x.name for x in interfaces]
         lag_prefix = "ae"
         if uplink_device_a.device_type.manufacturer.name == "Arista":
             lag_prefix = "Po"
