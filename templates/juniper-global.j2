@@ -93,7 +93,7 @@ system {
     commit synchronize;
     ntp {
 {% for server in ntpServers %}
-        {{ server }};
+        server {{ server }};
 {% endfor %}
     }
 }
@@ -245,7 +245,7 @@ routing-options {
 {% if "d1-ring" in device.name %}
             route ::/0 next-hop 2a06:5841:f:106::1;
 {% else %}
-            route ::/0 next-hop 2a06:5841:f:0:1;
+            route ::/0 next-hop 2a06:5841:f:0::1;
 {% endif %}
         }
     }
