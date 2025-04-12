@@ -25,8 +25,7 @@ interfaces {
 
 interfaces {
 {% for interface in interfaces %}
-    {% if interface.type not in ["1000base-t", "lag"] %}
-    {% elif interface.type in ["virtual"] %}
+    {% if interface.type in ["virtual"] %}
     {
         {% if interface.description %}
             description "{{ interface.description }}";
@@ -49,7 +48,7 @@ interfaces {
             {% endfor %}
         {% endif %}
     }
-    {% else %}
+    {% elif interface.type not in ["1000base-t", "lag"] %}
     {{ interface.name }} {
     {% if interface.description %}
         description "{{ interface.description }}";
@@ -94,6 +93,7 @@ interfaces {
         }
     {% endif %}
     }
+    {% else %}
     {% endif %}
 {% endfor %}
 }
