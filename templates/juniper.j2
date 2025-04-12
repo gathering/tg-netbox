@@ -48,7 +48,7 @@ interfaces {
             {% endfor %}
         {% endif %}
     }
-    {% elif interface.type in ["1000base-t", "lag"] %}
+    {% elif interface.type in ["1000base-t", "lag", "10gbase-x-sfpp"] %}
     {{ interface.name }} {
     {% if interface.description %}
         description "{{ interface.description }}";
