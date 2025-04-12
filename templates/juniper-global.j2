@@ -28,7 +28,7 @@ system {
             uid 2000;
             class super-user;
             authentication {
-                ssh-ed25519 "{{ hashes.handle_tech }}";
+                encrypted-password "{{ hashes.handle_tech }}";
             }
         }
         user tech {
