@@ -8,11 +8,23 @@
 
 interfaces {
 {% for interface in interfaces %}
-    {% if interface.type not in ["1000base-t", "lag", "virtual"] %}
+    {% if interface.type not in ["40gbase-x-qsfpp", "1000base-t", "lag", "virtual"] %}
     {% else %}
     {{ interface.name }} {
     {% if interface.description %}
         description "{{ interface.description }}";
+    {% endif %}
+    {% if interface.type == "lag" %}
+        aggregated-ether-options {
+            lacp {
+                active;
+            }
+        }
+    {% endif %}
+    {% if interface.tags | selectattr('slug', 'equalto', 'template-no-interface-autoneg') | list %}
+        ether-options {
+            no-auto-negotiation;
+        }
     {% endif %}
     {% if interface.lag %}
         ether-options {
@@ -22,15 +34,10 @@ interfaces {
         unit 0 {
         {% if interface.count_ipaddresses > 0 %}
             family inet {
-                filter {
-                    input mgmt-v4;
-                }
-                address TODO;
+                address 185.110.148.13/31;
+            }
             family inet6 {
-                filter {
-                    input mgmt-v4;
-                }
-                address TODO;
+                address 2a06:5841:f:106::2/64;
             }
         {% elif interface.mode == "access" %}
             family ethernet-switching {
@@ -67,8 +74,22 @@ vlans {
 {% for vlan in vlans %}
     {{ vlan.name }} {
         vlan-id {{ vlan.vid }};
-    {% if vlan.name == "juniper-mgmt" %}
+    {% if vlan.name == "d1-ring" %}
         l3-interface irb.{{ vlan.vid }};
+    {% endif %}
+    {% if vlan.name == "juniper-mgmt" %}
+        forwarding-options {
+            dhcp-security {
+                option-82 {
+                    circuit-id {
+                        prefix {
+                            host-name;
+                        }
+                        use-vlan-id;
+                    }
+                }
+            }
+        }
     {% endif %}
     }
 {% endfor %}

@@ -24,11 +24,11 @@ system {
 {% endfor %}
     }
     login {
-        user api {
+        user admin {
             uid 2000;
             class super-user;
             authentication {
-                ssh-ed25519 "{{ hashes.handle_api }}";
+                ssh-ed25519 "{{ hashes.handle_tech }}";
             }
         }
         user tech {
@@ -98,6 +98,9 @@ system {
     }
 }
 chassis {
+    redundancy {
+        graceful-switchover;
+    }
     aggregated-devices {
         ethernet {
             device-count 32;
@@ -115,22 +118,6 @@ snmp {
     community {{ SNMP.community }} {
         authorization read-only;
         client-list-name mgmt;
-    }
-}
-interfaces {
-    lo0 {
-        unit 0 {
-            family inet {
-                filter {
-                    input mgmt-v4;
-                }
-            }
-            family inet6 {
-                filter {
-                    input mgmt-v6;
-                }
-            }
-        }
     }
 }
 policy-options {
@@ -212,22 +199,57 @@ protocols {
     }
 }
 
+protocols {
+    rstp {
+    {% if device.role.slug == "access-switch" %}
+        bridge-priority 32k;
+        interface edge-ports {
+            edge;
+            no-root-port;
+        }
+    {% elif device.role.slug == "utskutt-distro" %}
+        bridge-priority 8k;
+    {% elif device.role.slug == "distro" %}
+        bridge-priority 4k;
+    {% endif %}
+
+    }
+    lldp {
+        port-id-subtype interface-name;
+        port-description-type interface-description;
+        {% if device.role.slug != "access-switch" %}
+        interface all;
+        {% else %}
+        interface uplink-ports;
+        {% endif %}
+    }
+}
+
+
 poe {
     interface all;
 }
 
-{# TODO find gateway ip #}
 routing-options {
     rib inet.0 {
         static {
-            route 0.0.0.0/0 next-hop 185.110.149.1/25;
+{% if "d1-ring" in device.name %}
+            route 0.0.0.0/0 next-hop 185.110.148.12;
+{% else %}
+            route 0.0.0.0/0 next-hop 185.110.149.1;
+{% endif %}
         }
     }
     rib inet6.0 {
         static {
-            route ::/0 next-hop 2a06:5841:f:0:1/64;
+{% if "d1-ring" in device.name %}
+            route ::/0 next-hop 2a06:5841:f:106::1;
+{% else %}
+            route ::/0 next-hop 2a06:5841:f:0:1;
+{% endif %}
         }
     }
+    nonstop-routing;
 }
 
 {% if device.virtual_chassis %}
