@@ -25,8 +25,8 @@ interfaces {
 
 interfaces {
 {% for interface in interfaces %}
-    {% if interface.type not in ["1000base-t", "lag"] %}
-    {% elif interface.type in ["virtual"] %}
+    {% if interface.type.value not in ["1000base-t", "lag"] %}
+    {% elif interface.type.value in ["virtual"] %}
     {
         {% if interface.description %}
             description "{{ interface.description }}";
