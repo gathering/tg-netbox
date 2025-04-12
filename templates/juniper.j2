@@ -36,7 +36,9 @@ interfaces {
             802.3ad {{ interface.lag.name }};
         }
     {% else %}
+    {% if "vlan" not in interface.name %}
         unit 0 {
+    {% endif %}
         {% if interface.count_ipaddresses > 0 %}
             {% for ip in interface.ip_addresses.all() %}
                 {% if ip.family == 4 %}
@@ -68,7 +70,9 @@ interfaces {
                 }
             }
         {% endif %}
-        }
+        {% if "vlan" not in interface.name %}
+            }
+        {% endif %}
     {% endif %}
     }
     {% endif %}
