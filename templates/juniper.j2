@@ -148,12 +148,19 @@ ethernet-switching-options {
 {% endfor %}
 ethernet-switching-options {
     secure-access-port {
+        vlan juniper-mgmt  {
+            dhcp-option82 {
+                circuit-id {
+                    prefix hostname;
+                    use-vlan-id;
+                }
+            }
+        }
 {% if device.role.slug == "access-switch" %}
         interface edge-ports {
             no-dhcp-trusted;
         }
-{% endif %}
-{% for vlan in vlans if not vlan.name == "juniper-mgmt" %} {# TOOD maybe also ignore wifi vlans #}
+    {% for vlan in vlans if not vlan.name == "juniper-mgmt" %} {# TOOD maybe also ignore wifi vlans #}
         vlan {{ vlan.name }} {
             arp-inspection;
             examine-dhcp;
@@ -172,9 +179,11 @@ ethernet-switching-options {
                 use-option-82;
             }
         }
+        {% endfor %}
         ipv6-source-guard-sessions {
             max-number 128;
         }
+    {% endif %}
     }
     port-error-disable {
         /* 30 minutes in seconds */
@@ -189,11 +198,10 @@ ethernet-switching-options {
         }
     {% else %}
         {% for interface in interfaces if interface.type == "lag" and interface.name != "ae0" %}
-        {{ interface }}.0;
+        interface {{ interface }}.0;
         {% endfor %}
     {% endif %}
     }
-{% endfor %}
 }
 vlans {
 {% for vlan in vlans %}
