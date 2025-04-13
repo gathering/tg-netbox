@@ -4,7 +4,7 @@
 
 system {
 {% if device.virtual_chassis %}
-    host-name {{ virtual_chassis.name }};
+    host-name {{ device.virtual_chassis.name }};
 {% else %}
     host-name {{ device.name }};
 {% endif %}
