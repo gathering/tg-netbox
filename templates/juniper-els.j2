@@ -1,8 +1,4 @@
-{% if test is defined %}
-    {% set device = dcim.Device.objects.get(name=device) %}
-{%else %}
-    {% include 'templates/juniper-global.j2' %}
-{% endif %}
+{% include 'templates/juniper-global.j2' %}
 
 {% set interfaces = [] %}
 {% if device.virtual_chassis %}
