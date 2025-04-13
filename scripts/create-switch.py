@@ -231,6 +231,7 @@ class CreateSwitch(Script):
             description=switch_uplink_description,
             type=InterfaceTypeChoices.TYPE_LAG,
             mode=InterfaceModeChoices.MODE_TAGGED,
+            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
         )
         if uplink_device_a.role.slug == DEVICE_ROLE_UTSKUTT_DISTRO:
             uplink_lag = Interface.objects.get(device=uplink_device_a, name="ae0")
