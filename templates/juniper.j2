@@ -70,7 +70,31 @@ interfaces {
             }
         }
     {% endif %}
-    {% if interface.lag %}
+    {% if interface.lag and 'fap-interface' in interface.tags.slugs() and interface.connected_endpoints[0].device.status == "active" %}
+        ether-options {
+            802.3ad {{ interface.lag.name }};
+        }
+        inactive: unit 0 {
+            family ethernet-switching {
+                port-mode access;
+                vlan {
+                    members juniper-mgmt;
+                }
+            }
+        }
+    {% elif interface.lag and 'fap-interface' in interface.tags.slugs() and interface.connected_endpoints[0].device.status == "staged" %}
+        inactive: ether-options {
+            802.3ad {{ interface.lag.name }};
+        }
+        unit 0 {
+            family ethernet-switching {
+                port-mode access;
+                vlan {
+                    members juniper-mgmt;
+                }
+            }
+        }
+    {% elif interface.lag %}
         ether-options {
             802.3ad {{ interface.lag.name }};
         }
