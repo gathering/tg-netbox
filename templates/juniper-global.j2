@@ -3,7 +3,11 @@
 {%endif%}
 
 system {
+{% if device.virtual_chassis %}
+    host-name {{ virtual_chassis.name }};
+{% else %}
     host-name {{ device.name }};
+{% endif %}
     auto-snapshot;
     domain-name {{ domainName }};
     time-zone Europe/Oslo;
