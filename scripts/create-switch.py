@@ -294,6 +294,8 @@ class CreateSwitch(Script):
 
             uplink_device_interface.description = f'G: {switch.name} {switch_uplink_interface.name} ({uplink_lag_name})'
             uplink_device_interface.save()
+            if uplink_num == 0:
+                uplink_device_interface.tags.add("fap-interface")
 
             switch_uplink_interface.description = f"G: {uplink_device_a.name} {uplink_device_interface.name} (ae0)"
             switch_uplink_interface.lag = switch_uplink_lag
