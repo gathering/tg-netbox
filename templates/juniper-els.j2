@@ -40,7 +40,7 @@ interfaces {
         description "{{ interface.description }}";
     {% endif %}
     {% if interface.untagged_vlan %}
-    native-vlan-id {{ interface.untagged_vlan.vid }};
+        native-vlan-id {{ interface.untagged_vlan.vid }};
     {% endif %}
     {% if interface.type == "lag" %}
         aggregated-ether-options {
@@ -84,9 +84,6 @@ interfaces {
                     members [ {% for vlan in interface.tagged_vlans.all() %}{{ vlan.name }} {% endfor -%} ];
                 {% endif %}
                 }
-            {% if interface.untagged_vlan %}
-                native-vlan-id {{ interface.untagged_vlan.vid }};
-            {% endif %}
             }
         {% endif %}
         }
