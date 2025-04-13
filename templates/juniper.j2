@@ -135,6 +135,9 @@ ethernet-switching-options {
             {% do vlans.append(vlan) %}
         {% endif %}
     {% endfor %}
+    {% if interface.untagged_vlan and interface.untagged_vlan not in vlans %}
+        {% do vlans.append(interface.untagged_vlan) %}
+    {% endif %}
 {% endfor %}
 ethernet-switching-options {
     secure-access-port {

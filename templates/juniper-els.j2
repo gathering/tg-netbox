@@ -8,8 +8,33 @@
 
 interfaces {
 {% for interface in interfaces %}
-    {% if interface.type not in ["40gbase-x-qsfpp", "1000base-t", "lag", "virtual"] %}
-    {% else %}
+    {% if interface.type in ["virtual"] %}
+    {% set interface_name_parts =  interface.name.split(".") %}
+    {{ interface_name_parts[0] }} {
+        unit {{ interface_name_parts[1] }} {
+        {% if interface.description %}
+            description "{{ interface.description }}";
+        {% endif %}
+        {% if interface.count_ipaddresses > 0 %}
+            {% for ip in interface.ip_addresses.all() %}
+                {% if ip.family == 4 %}
+            family inet {
+                filter {
+                    input mgmt-v4;
+                }
+                {% elif ip.family == 6 %}
+            family inet6 {
+                filter {
+                    input mgmt-v6;
+                }
+                {% endif %}
+                address {{ ip.address }};
+            }
+            {% endfor %}
+        {% endif %}
+        }
+    }
+    {% elif interface.type in ["40gbase-x-qsfpp","10gbase-x-sfpp", "1000base-t", "lag"] %}
     {{ interface.name }} {
     {% if interface.description %}
         description "{{ interface.description }}";
@@ -76,6 +101,9 @@ interfaces {
             {% do vlans.append(vlan) %}
         {% endif %}
     {% endfor %}
+    {% if interface.untagged_vlan and interface.untagged_vlan not in vlans %}
+        {% do vlans.append(interface.untagged_vlan) %}
+    {% endif %}
 {% endfor %}
 vlans {
 {% for vlan in vlans %}
