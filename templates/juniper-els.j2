@@ -6,7 +6,7 @@
 
 
 {% if device.virtual_chassis %}
-    {% set interfaces = dcim.Interfaces.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
+    {% set interfaces = dcim.Interface.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
 {% else %}
     {% set interfaces = device.interfaces.filter() %}
 {% endif %}
