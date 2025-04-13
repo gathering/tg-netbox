@@ -45,3 +45,6 @@ Validere templates med junoser
 ```
 make juniper | tail -n +2 | junoser -c
 ```
+
+## Flytskjema
+![flytskjema](/documentation/flowchart.png)
