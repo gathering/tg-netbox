@@ -72,7 +72,12 @@ def main():
 
     dataz = { "device": DEVICE_NAME, "test": True}
 
-    print(nbrender(dataz, template_id)['content'])
+    result = nbrender(dataz, template_id)
+
+    if "content" in result :
+        print(result['content'])
+    else:
+        print(f'No content. Possible error: {result}')
 
     nbdelete(template_id)
 
