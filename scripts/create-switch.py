@@ -233,10 +233,15 @@ class CreateSwitch(Script):
             untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
         )
         switch_uplink_lag.save()
+
+        ## Add vlan upstream always
+        lag_on_uplink_device = Interface.objects.get(device=uplink_device_a, name="ae0")
+        lag_on_uplink_device.tagged_vlans.add(vlan.id)
+
+        ## if utskutt distro, add even more upstream
         if uplink_device_a.role.slug == DEVICE_ROLE_UTSKUTT_DISTRO:
-            uplink_lag = Interface.objects.get(device=uplink_device_a, name="ae0")
-            uplink_lag.tagged_vlans.add(vlan.id)
-            self.log_info(f"Added vlan to utskutt distro uplink LAG")
+            ring_fabric_uplink = Interface.objects.get(device__name="d1-ring-noc", name="ae0")
+            ring_fabric_uplink.tagged_vlans.add(vlan.id)
 
         switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
         if switch.role.slug == DEVICE_ROLE_ACCESS:
