@@ -193,8 +193,8 @@ class CreateSwitch(Script):
             {
                 "switch_name": switch.name,
                 "switch_url": switch.get_absolute_url(),
-                "network_v4": str(v4_prefix.prefix) if v4_prefix is not None: None,
-                "network_v6": str(v4_prefix.prefix) if v6_prefix is not None: None,
+                "network_v4": str(v4_prefix.prefix) if v4_prefix is not None else None,
+                "network_v6": str(v4_prefix.prefix) if v6_prefix is not None else None,
                 "switch_mgmt_v4": str(switch.primary_ip4.address),
                 "switch_mgmt_v6": str(switch.primary_ip6.address)
             }
