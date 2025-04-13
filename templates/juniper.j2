@@ -1,13 +1,12 @@
-{% if test %}
-{% set device = dcim.Device.objects.get(name=device) %}
-{%else %}
 {% include 'templates/juniper-global.j2' %}
 {%endif%}
 
 {% set interfaces = [] %}
 {% if device.virtual_chassis %}
     {% for vc_member in dcim.VirtualChassis.objects.get(id=device.virtual_chassis.id).members.all() %}
-        {% do interfaces.append(dcim.Interface.objects.filter(device_id=vc_member.id )) %}
+        {% for interfaces in dcim.Interface.objects.filter(device_id=vc_member.id) %}
+            {% do interfaces.append(test) %}
+        {% endfor %}
     {% endfor %}
 {% else %}
     {% set interfaces = device.interfaces.filter() %}
