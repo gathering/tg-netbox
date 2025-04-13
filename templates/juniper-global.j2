@@ -123,12 +123,12 @@ snmp {
 policy-options {
     prefix-list mgmt-v4 {
 	{% for x in mgmt_addresses_v4 %}
-        {{ x }}:
+        {{ x }};
     {% endfor %}
     }
     prefix-list mgmt-v6 {
 	{% for x in mgmt_addresses_v6 %}
-        {{ x }}:
+        {{ x }};
     {% endfor %}
     }
     /* Merged separate v4- og v6-lister */
