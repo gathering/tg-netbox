@@ -1,4 +1,9 @@
+{% if test %}
+{% set device = dcim.Device.objects.get(name=device) %}
+{%else %}
 {% include 'templates/juniper-global.j2' %}
+{%endif%}
+
 
 {% if device.virtual_chassis %}
     {% set interfaces = dcim.Interfaces.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}

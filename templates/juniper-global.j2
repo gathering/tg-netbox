@@ -1,3 +1,7 @@
+{% if test %}
+{% set device = dcim.Device.objects.get(name=device) %}
+{%endif%}
+
 system {
     host-name {{ device.name }};
     auto-snapshot;
