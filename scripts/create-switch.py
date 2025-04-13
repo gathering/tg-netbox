@@ -58,6 +58,8 @@ UPLINK_PORTS = {
     'EX3300-48P': ["xe-0/1/0", "xe-0/1/1"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
 }
 
+IRB_MODELS = ["EX2200-48T-4G", "EX3300-48P"]
+
 UPLINK_TYPES = (
     (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G RJ45'),
     (InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, '10G SFP+'),
@@ -361,7 +363,7 @@ class CreateSwitch(Script):
         switch.save()
 
         mgmt_interface_name = "irb"
-        if switch.device_type.model == "EX2200-48T-4G":
+        if switch.device_type.model in IRB_MODELS:
             mgmt_interface_name = "vlan"
 
         mgmt_vlan_interface = Interface.objects.create(
