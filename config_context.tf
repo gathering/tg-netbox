@@ -11,10 +11,10 @@ resource "netbox_config_context" "global_context" {
       },
       domainName = "tg25.tg.no",
       hashes = {
-        handle_api  = "FISK"
-        handle_root = "asdasdasd"
-        handle_tech = "snurrekanel"
-        tacacs      = "kanelsnurrr"
+        handle_api  = "$6$o3yH6BPA$kvN3XU9yfDduzrerBuPM2pIC3VzmSobfXuNvVdDNH5/5SHDa1fM5RQDONYeMzgGnFkWldcroYpByBYOoqY6aw."
+        handle_root = "$6$17aT/GOm$hjhMYX2QtisYwV/cdhbyolMfutNk.13xcoGAnTyyFOBnTQQxOknBbQKfDqOu10SflelCQIUxpJRCoKsdum3rt0"
+        handle_tech = "$6$o3yH6BPA$kvN3XU9yfDduzrerBuPM2pIC3VzmSobfXuNvVdDNH5/5SHDa1fM5RQDONYeMzgGnFkWldcroYpByBYOoqY6aw."
+        tacacs      = "100C4A1C350545091B22320D2E316E6113051301062046524C7E755C553E05797C0A6401431238654727400014141C016427404A29625D3008083A3C524E"
       },
       nameServers = [
         "1.1.1.1",
@@ -29,12 +29,10 @@ resource "netbox_config_context" "global_context" {
         "2001:700:100:2::6"
       ]
       oxidizedServers = [
-        "12.34.56.78",
-        "20aa::1"
+        "2a02:d140:c012:1::73",
       ]
       tacacsServers = [
-        "21.43.65.87",
-        "2000:9999::1"
+        "2a02:d140:c012:1::73",
       ]
     }
   )
