@@ -266,7 +266,6 @@ virtual-chassis {
     vcp-snmp-statistics;
     {% for member in dcim.Device.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
     member {{ member.vc_position }} {
-        mastership-priority {{ member.vc_priority if member.vc_priority is not none else '128' }};
         serial-number {{ member.serial }};
         {% if member.vc_priority is not none and member.vc_priority > 200 %}
         role routing-engine;
