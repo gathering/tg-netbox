@@ -1,6 +1,6 @@
-{% if test %}
-{% set device = dcim.Device.objects.get(name=device) %}
-{%endif%}
+{% if test is defined %}
+    {% set device = dcim.Device.objects.get(name=device) %}
+{% endif %}
 
 system {
 {% if device.virtual_chassis %}
