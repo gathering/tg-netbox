@@ -12,6 +12,7 @@
         {% endfor %}
     {% endfor %}
 {% else %}
+    {% set interfaces = device.interfaces.filter() %}
 {% endif %}
 
 {% set edge_interfaces = [] %}
