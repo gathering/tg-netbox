@@ -53,7 +53,6 @@ FABRIC_V6_CLIENTS_PREFIX = Prefix.objects.get(prefix__family=6, prefix='2a06:584
 FABRIC_V4_JUNIPER_MGMT_PREFIX = Prefix.objects.get(prefix__family=4, prefix='185.110.149.0/25', vrf=FABRIC_CLIENTS_VRF)
 FABRIC_V6_JUNIPER_MGMT_PREFIX = Prefix.objects.get(prefix__family=6, prefix='2a06:5841:f::/64', vrf=FABRIC_CLIENTS_VRF)
 
-## TODO support 1G uplinks on EX3300
 UPLINK_PORTS = {
     'EX2200-48T-4G': ["ge-0/0/44", "ge-0/0/45", "ge-0/0/46", "ge-0/0/47"],
     'EX3300-48P': ["xe-0/1/0", "xe-0/1/1"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
