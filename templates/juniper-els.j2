@@ -58,14 +58,14 @@ interfaces {
             }
         }
     {% endif %}
-    {% if interface.tags | selectattr('slug', 'equalto', 'template-no-interface-autoneg') | list %}
+    {% if 'template-no-interface-autoneg' in interface.tags.slugs() %}
         ether-options {
             no-auto-negotiation;
         }
     {% endif %}
     {% if interface.lag %}
         ether-options {
-        {% if interface.tags | selectattr('slug', 'equalto', 'fap-interface') | list %}
+        {% if 'fap-interface' in interface.tags.slugs() %}
             802.3ad {
                 lacp {
                     force-up;
