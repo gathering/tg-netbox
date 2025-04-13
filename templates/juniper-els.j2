@@ -39,6 +39,9 @@ interfaces {
     {% if interface.description %}
         description "{{ interface.description }}";
     {% endif %}
+    {% if interface.untagged_vlan %}
+    native-vlan-id {{ interface.untagged_vlan.vid }};
+    {% endif %}
     {% if interface.type == "lag" %}
         aggregated-ether-options {
             lacp {
