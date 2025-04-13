@@ -257,13 +257,20 @@ routing-options {
 }
 
 {% if device.virtual_chassis %}
+{#
+    VC mastership logikk:
+    vc-priority angir hvem som blir routing-engine, backup-routing-engine og line-cards. 0-255. Jo høyere, jo bedre. Alt over 200 blir satt til "master"
+    128 = default
+
+#}
 virtual-chassis {
     preprovisioned;
     vcp-snmp-statistics;
     {% for member in dcim.Device.objects.filter(virtual_chassis_id=device.virtual_chassis.id) %}
     member {{ member.vc_position }} {
+        mastership-priority {{ member.vc_priority if member.vc_priority is not none else '128' }};
         serial-number {{ member.serial }};
-        {% if member.tags | selectattr('slug', 'equalto', 'juniper-vc-re') | list %}
+        {% if member.vc_priority is not none and member.vc_priority > 200 %}
         role routing-engine;
         {% else %}
         role line-card;
