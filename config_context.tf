@@ -14,7 +14,7 @@ resource "netbox_config_context" "global_context" {
         handle_api  = "$6$o3yH6BPA$kvN3XU9yfDduzrerBuPM2pIC3VzmSobfXuNvVdDNH5/5SHDa1fM5RQDONYeMzgGnFkWldcroYpByBYOoqY6aw."
         handle_root = "$6$17aT/GOm$hjhMYX2QtisYwV/cdhbyolMfutNk.13xcoGAnTyyFOBnTQQxOknBbQKfDqOu10SflelCQIUxpJRCoKsdum3rt0"
         handle_tech = "$6$o3yH6BPA$kvN3XU9yfDduzrerBuPM2pIC3VzmSobfXuNvVdDNH5/5SHDa1fM5RQDONYeMzgGnFkWldcroYpByBYOoqY6aw."
-        tacacs      = "100C4A1C350545091B22320D2E316E6113051301062046524C7E755C553E05797C0A6401431238654727400014141C016427404A29625D3008083A3C524E"
+        tacacs      = "$9$qf5Q/9puBRn/WL7NY2369tuBreW-dwEcoGDkPfRhcyv8db2JUHoJi.PfF3hSrv87bs4Ujk.PvWXxdVfTQ36CuOREhyvWmfz3AtWLXNs4DjHm5zLxNdVbg4/CtOhSylM-dsNd2aUHf5puOIEcKvW8X-UjA0BRrlYgoJDk/9tIESB1"
       },
       nameServers = [
         "1.1.1.1",
