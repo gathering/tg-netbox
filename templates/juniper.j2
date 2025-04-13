@@ -26,7 +26,9 @@ interfaces {
 interfaces {
 {% for interface in interfaces %}
     {% if interface.type in ["virtual"] %}
-    {{ interface.name }} {
+    {% set interface_name_parts =  interface.name.split(".") %}
+    {{ interface_name_parts[0] }} {
+        unit {{ interface_name_parts[1] }} {
         {% if interface.description %}
             description "{{ interface.description }}";
         {% endif %}
@@ -47,11 +49,19 @@ interfaces {
             }
             {% endfor %}
         {% endif %}
+        }
     }
     {% elif interface.type in ["1000base-t", "lag", "10gbase-x-sfpp"] %}
     {{ interface.name }} {
     {% if interface.description %}
         description "{{ interface.description }}";
+    {% endif %}
+    {% if interface.type == "lag" %}
+        aggregated-ether-options {
+            lacp {
+                active;
+            }
+        }
     {% endif %}
     {% if interface.lag %}
         ether-options {
