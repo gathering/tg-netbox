@@ -212,7 +212,6 @@ vlans {
 {% if device.role.slug == "utskutt-distro" %}
 event-options {
     {% for interface in interfaces if interface.type == "lag" and interface.name != "ae0" %}
-    {% set fap_interface = dcim.Interfaces.objects.filter(lag_id=interface.id) %}
     policy {{ interface.name }}down {
         events snmp_trap_link_down;
         attributes-match {
@@ -222,12 +221,12 @@ event-options {
             change-configuration {
                 retry count 10 interval 10;
                 commands {
-                    "activate interfaces {{ fap_interface[0].name }} unit 0";
-                    "deactivate interfaces {{ fap_interface[0].name }} ether-options";
+                    "activate interfaces {{ dcim.Interfaces.objects.filter(lag_id=interface.id)[0].name }} unit 0";
+                    "deactivate interfaces {{ dcim.Interfaces.objects.filter(lag_id=interface.id)[0].name }} ether-options";
                 }
                 user-name tech;
                 commit-options {
-                    log "Autoconfig-script: {{ interface.name }}went down so removed {{ fap_interface[0].name }} from bundle";
+                    log "Autoconfig-script: {{ interface.name }}went down so removed {{ dcim.Interfaces.objects.filter(lag_id=interface.id)[0].name }} from bundle";
                 }
             }
         }
@@ -241,12 +240,12 @@ event-options {
             change-configuration {
                 retry count 10 interval 10;
                 commands {
-                    "deactivate interfaces {{ fap_interface[0].name }} unit 0";
-                    "activate interfaces {{ fap_interface[0].name }} ether-options";
+                    "deactivate interfaces {{ dcim.Interfaces.objects.filter(lag_id=interface.id)[0].name }} unit 0";
+                    "activate interfaces {{ dcim.Interfaces.objects.filter(lag_id=interface.id)[0].name }} ether-options";
                 }
                 user-name tech;
                 commit-options {
-                    log "Autoconfig-script: {{ interface.name }} came up so added {{ fap_interface[0].name }} to bundle";
+                    log "Autoconfig-script: {{ interface.name }} came up so added {{ dcim.Interfaces.objects.filter(lag_id=interface.id)[0].name }} to bundle";
                 }
             }
         }
