@@ -61,7 +61,16 @@ interfaces {
     {% endif %}
     {% if interface.lag %}
         ether-options {
+        {% if interface.tags | selectattr('slug', 'equalto', 'fap-interface') | list %}
+            802.3ad {
+                lacp {
+                    force-up;
+                }
+                {{ interface.lag.name }};
+            }
+        {% else %}
             802.3ad {{ interface.lag.name }};
+        {% endif %}
         }
     {% else %}
         unit 0 {

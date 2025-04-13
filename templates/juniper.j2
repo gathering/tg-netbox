@@ -10,20 +10,23 @@
     {% set interfaces = device.interfaces.filter() %}
 {% endif %}
 
-interfaces {
-    interface-range edge-ports {
+{% set edge_interfaces = [] %}
 {% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
     {% if interface.mode == "access" %}
-        member {{ interface.name }};
+        {% do edge_interfaces.append(interface) %}
     {% endif %}
 {% endfor %}
+
+interfaces {
+{% if edge_interfaces | length > 0  %}
+    {% for interface in edge_interfaces %}
+    interface-range edge-ports {
+        member {{ interface.name }};
+    {% endfor %}
     }
+{% endif %}
     interface-range uplink-ports {
-{% for interface in interfaces %}
-    {% if interface.lag %}
-        member {{ interface.name }};
-    {% endif %}
-{% endfor %}
+        member ae0.0;
     }
 }
 
@@ -178,15 +181,15 @@ ethernet-switching-options {
         disable-timeout 1800;
     }
     storm-control {
-        action-shutdown;
     {% if device.role.slug == "access-switch" %}
+        action-shutdown;
         interface edge-ports {
             bandwidth 20000;
             multicast;
         }
     {% else %}
-        {% for interface in interfaces if interface.type == "lag" %}
-        {{ interface }}.0
+        {% for interface in interfaces if interface.type == "lag" and interface.name != "ae0" %}
+        {{ interface }}.0;
         {% endfor %}
     {% endif %}
     }
