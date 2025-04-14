@@ -243,9 +243,10 @@ class CreateSwitch(Script):
         if uplink_device_a.virtual_chassis:
             ae_device = uplink_device_a.virtual_chassis.master
 
-        ## Add vlan upstream always
-        lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
-        lag_on_uplink_device.tagged_vlans.add(vlan.id)
+        ## Add vlan upstream if not connected to leaf
+        if uplink_device_a.role.slug != DEVICE_ROLE_LEAF:
+            lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
+            lag_on_uplink_device.tagged_vlans.add(vlan.id)
 
         ## if utskutt distro, add even more upstream
         if uplink_device_a.role.slug == DEVICE_ROLE_UTSKUTT_DISTRO:
