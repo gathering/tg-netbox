@@ -19,8 +19,8 @@
 {% endfor %}
 
 {% if edge_interfaces | length > 0  %}
-    {% for interface in edge_interfaces %}
     interface-range edge-ports {
+    {% for interface in edge_interfaces %}
         member {{ interface.name }};
     {% endfor %}
     }
