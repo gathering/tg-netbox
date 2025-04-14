@@ -3,7 +3,7 @@ import json
 from extras.scripts import *
 from django.contrib.contenttypes.models import ContentType
 
-from dcim.models import Cable, CableTermination, Device, DeviceType, Location, DeviceRole, Site, Interface
+from dcim.models import Cable, CableTermination, Device, DeviceType, Location, DeviceRole, Site, Interface, VirtualChassis
 from dcim.choices import InterfaceModeChoices, InterfaceTypeChoices
 
 from ipam.models import VLANGroup, VLAN, Role, Prefix, IPAddress, VRF
@@ -236,8 +236,12 @@ class CreateSwitch(Script):
         )
         switch_uplink_lag.save()
 
+        ae_device = uplink_device_a
+        if uplink_device_a.virtual_chassis:
+            ae_device= uplink_device_a.virtual_chassis.master
+
         ## Add vlan upstream always
-        lag_on_uplink_device = Interface.objects.get(device=uplink_device_a, name="ae0")
+        lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
         lag_on_uplink_device.tagged_vlans.add(vlan.id)
 
         ## if utskutt distro, add even more upstream
@@ -331,9 +335,9 @@ class CreateSwitch(Script):
         self.log_debug(f"device vc {uplink_device_a.virtual_chassis}")
         self.log_debug(f"device vc {uplink_device_a.virtual_chassis}")
         if uplink_device_a.virtual_chassis != None:
-            interfaces = list(
-                Interface.objects.filter(device_id=uplink_device_a.virtual_chassis.master.id,
-                                         type=InterfaceTypeChoices.TYPE_LAG))
+            vc = VirtualChassis.objects.get(uplink_device_a.virtual_chassis.id)
+            for member in vc.members:
+                interfaces.append(list(Interface.objects.filter(device_id=member.id, type=InterfaceTypeChoices.TYPE_LAG)))
         else:
             interfaces = list(Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))
 
