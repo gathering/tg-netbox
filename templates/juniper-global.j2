@@ -119,7 +119,7 @@ chassis {
 snmp {
     contact "{{ SNMP.contact }}";
     location "{{ SNMP.location }}";
-    community {{ SNMP.community }} {
+    community "{{ SNMP.community }}" {
         authorization read-only;
         client-list-name mgmt;
     }
