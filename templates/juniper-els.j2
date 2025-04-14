@@ -39,7 +39,7 @@ interfaces {
         {% endif %}
         }
     }
-    {% elif interface.type in ["40gbase-x-qsfpp","10gbase-x-sfpp", "1000base-t", "lag"] %}
+    {% elif interface.type in ["40gbase-x-qsfpp","10gbase-x-sfpp", "1000base-t", "lag", "1000base-x-sfp"] %}
     {{ interface.name }} {
     {% if interface.description %}
         description "{{ interface.description }}";
