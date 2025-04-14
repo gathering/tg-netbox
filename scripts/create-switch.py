@@ -10,6 +10,8 @@ from dcim.choices import InterfaceModeChoices, InterfaceTypeChoices
 from ipam.models import VLANGroup, VLAN, Role, Prefix, IPAddress, VRF
 from ipam.choices import PrefixStatusChoices
 
+from extras.models import ConfigTemplate
+
 import random
 import string
 
@@ -361,12 +363,15 @@ class CreateSwitch(Script):
         if switch_name == DEFAULT_SWITCH_NAME:
             switch_name = f"e1.test-{''.join(random.sample(string.ascii_uppercase * 6, 6))}"
 
+        config_template = ConfigTemplate.objects.get(name="juniper")
+
         switch = Device(
             name=switch_name,
             device_type=device_type,
             location=destination_device_a.location,
             role=device_role,
-            site=DEFAULT_SITE
+            site=DEFAULT_SITE,
+            config_template=config_template,
         )
         switch.save()
 
