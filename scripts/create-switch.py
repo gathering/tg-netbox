@@ -3,7 +3,8 @@ import json
 from extras.scripts import *
 from django.contrib.contenttypes.models import ContentType
 
-from dcim.models import Cable, CableTermination, Device, DeviceType, Location, DeviceRole, Site, Interface, VirtualChassis
+from dcim.models import Cable, CableTermination, Device, DeviceType, Location, DeviceRole, Site, Interface, \
+    VirtualChassis
 from dcim.choices import InterfaceModeChoices, InterfaceTypeChoices
 
 from ipam.models import VLANGroup, VLAN, Role, Prefix, IPAddress, VRF
@@ -238,7 +239,7 @@ class CreateSwitch(Script):
 
         ae_device = uplink_device_a
         if uplink_device_a.virtual_chassis:
-            ae_device= uplink_device_a.virtual_chassis.master
+            ae_device = uplink_device_a.virtual_chassis.master
 
         ## Add vlan upstream always
         lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
@@ -434,6 +435,7 @@ class CreateSwitch(Script):
             description=f'B: {switch.name} ae0',
             type=InterfaceTypeChoices.TYPE_LAG,
             mode=InterfaceModeChoices.MODE_TAGGED,
+            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
         )
         destination_lag.save()
         destination_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
