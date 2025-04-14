@@ -219,11 +219,7 @@ protocols {
     lldp {
         port-id-subtype interface-name;
         port-description-type interface-description;
-        {% if device.role.slug != "access-switch" %}
         interface all;
-        {% else %}
-        interface uplink-ports;
-        {% endif %}
     }
 }
 
