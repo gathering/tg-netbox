@@ -24,7 +24,7 @@ from utilities.exceptions import AbortScript
 # ✅ Edge switch on leaf-pair
 # ✅ Utskutt distro (nice to have)
 
-DEFAULT_SWITCH_NAME = "e1.test"
+DEFAULT_SWITCH_NAME = "e1-test"
 DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
 DEFAULT_DEVICE_ROLE = DeviceRole.objects.get(slug='access-switch')
@@ -101,7 +101,7 @@ class CreateSwitch(Script):
         description="Switch name. Remember, e = access switch, d = distro switch",
         required=True,
         default=DEFAULT_SWITCH_NAME,
-        regex="^[ed]\d{1,2}\."
+        regex="^[ed]\d{1,2}-"
     )
     device_type = ObjectVar(
         description="Device model",
