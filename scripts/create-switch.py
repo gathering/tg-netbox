@@ -335,13 +335,11 @@ class CreateSwitch(Script):
 
     def get_next_free_lag_number(self, uplink_device_a):
         interfaces = []
-        self.log_debug(f"device vc {uplink_device_a.virtual_chassis}")
-        self.log_debug(f"device vc {uplink_device_a.virtual_chassis}")
-
         if uplink_device_a.virtual_chassis != None:
             vc = VirtualChassis.objects.get(id=uplink_device_a.virtual_chassis.id)
+            self.log_debug(f"vc {vc}")
             for member in vc.members.all():
-                interfaces + list(Interface.objects.filter(device_id=member.id, type=InterfaceTypeChoices.TYPE_LAG))
+                interfaces = interfaces + list(Interface.objects.filter(device=member, type=InterfaceTypeChoices.TYPE_LAG))
         else:
             interfaces = list(Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))
 
@@ -350,12 +348,11 @@ class CreateSwitch(Script):
         if uplink_device_a.device_type.manufacturer.name == "Arista":
             lag_prefix = "Po"
 
+        self.log_debug(f"existing lag names: {existing_lag_names}")
         if "ae10" not in existing_lag_names and "Po10" not in existing_lag_names:
             return f"{lag_prefix}10"
 
-        self.log_debug(f"existing lag names: {existing_lag_names}")
         lag_numbers = [int(lag[2:]) for lag in existing_lag_names]
-        self.log_debug(f"existing lag numbers: {lag_numbers}")
         next_free = max(lag_numbers) + 1
         return f"{lag_prefix}{next_free}"
 
