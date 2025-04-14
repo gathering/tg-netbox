@@ -119,6 +119,16 @@ interfaces {
         {% do vlans.append(interface.untagged_vlan) %}
     {% endif %}
 {% endfor %}
+
+{% set aes_to_utskutt = [] %}
+{% for interface in interfaces %}
+    {% if interface.connected_endpoints | length > 0 and interface.connected_endpoints[0].device.role.slug == "utskutt-distro" %}
+        {% if interface.lag.name not in aes_to_utskutt %}
+            {% do aes_to_utskutt.append(interface.lag.name) %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
 vlans {
 {% for vlan in vlans %}
     {{ vlan.name }} {
@@ -129,6 +139,17 @@ vlans {
     {% if vlan.name == "juniper-mgmt" %}
         forwarding-options {
             dhcp-security {
+        {% if aes_to_utskutt | length > 0 %}
+                group utskutt {
+                    overrides {
+                        trusted;
+                        no-option82;
+                    }
+            {% for ae in aes_to_utskutt %}
+                    interface {{ ae }}.0;
+            {% endfor %}
+                }
+        {% endif %}
                 option-82 {
                     circuit-id {
                         prefix {
