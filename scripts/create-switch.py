@@ -338,7 +338,7 @@ class CreateSwitch(Script):
         if uplink_device_a.virtual_chassis != None:
             vc = VirtualChassis.objects.get(id=uplink_device_a.virtual_chassis.id)
             for member in vc.members.all():
-                interfaces.append(list(Interface.objects.filter(device_id=member.id, type=InterfaceTypeChoices.TYPE_LAG)))
+                interfaces + list(Interface.objects.filter(device_id=member.id, type=InterfaceTypeChoices.TYPE_LAG))
         else:
             interfaces = list(Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))
 
