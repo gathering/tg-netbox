@@ -18,6 +18,7 @@
     {% endif %}
 {% endfor %}
 
+interfaces {
 {% if edge_interfaces | length > 0  %}
     interface-range edge-ports {
     {% for interface in edge_interfaces %}
@@ -25,8 +26,6 @@
     {% endfor %}
     }
 {% endif %}
-
-interfaces {
 {% for interface in interfaces %}
     {% if interface.type in ["virtual"] %}
     {% set interface_name_parts =  interface.name.split(".") %}
