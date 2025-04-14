@@ -139,7 +139,7 @@ class CreateSwitch(Script):
     )
     # If leaf pair we assume same port. This input only cares about cases with single device.
     destination_interfaces = MultiObjectVar(
-        description="Destination interface(s). \n\n IF You're looking at d1.ring: ge-{PLACEMENT}/x/x. Placements: 0 = South, 1 = Log, 2 = Swing, 3 = North, 4 = noc, 5 = tele",
+        description="Destination interface(s)",
         model=Interface,
         query_params={
             'device_id': '$destination_device_a',
