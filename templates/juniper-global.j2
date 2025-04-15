@@ -203,7 +203,6 @@ protocols {
 
 protocols {
     rstp {
-        interface all;
     {% if device.role.slug == "access-switch" %}
         bridge-priority 32k;
         interface edge-ports {
@@ -214,6 +213,7 @@ protocols {
         bridge-priority 8k;
     {% elif device.role.slug == "distro" %}
         bridge-priority 4k;
+        interface all;
     {% endif %}
 
     }
@@ -256,7 +256,6 @@ routing-options {
     VC mastership logikk:
     vc-priority angir hvem som blir routing-engine, backup-routing-engine og line-cards. 0-255. Jo høyere, jo bedre. Alt over 200 blir satt til "master"
     128 = default
-
 #}
 virtual-chassis {
     preprovisioned;
