@@ -224,7 +224,7 @@ class CreateSwitch(Script):
 
     def connect_switch(self, switch, uplink_types, uplink_device_a, uplink_device_b, destination_interfaces, vlan=None):
         uplink_lag_name = self.get_next_free_lag_number(uplink_device_a)
-
+        print(f'connect_switch() uplink_lag_name: {uplink_lag_name}')
         switch_uplink_description = f"B: {uplink_device_a} {uplink_lag_name}"
         if uplink_device_b:
             switch_uplink_description = f"B: {uplink_device_a.name} / {uplink_device_a.name} {uplink_lag_name}"
@@ -239,12 +239,14 @@ class CreateSwitch(Script):
         )
         switch_uplink_lag.save()
 
+        print(f'connect_switch() switch_uplink_lag:', switch_uplink_lag)
+
         ae_device = uplink_device_a
         if uplink_device_a.virtual_chassis:
             ae_device = uplink_device_a.virtual_chassis.master
 
         ## Add vlan upstream if not connected to leaf
-        if uplink_device_a.role.slug != DEVICE_ROLE_LEAF:
+        if uplink_device_a.role.slug != DEVICE_ROLE_LEAF:lag_on_uplink_device
             lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
             lag_on_uplink_device.tagged_vlans.add(vlan.id)
 
@@ -373,6 +375,8 @@ class CreateSwitch(Script):
         )
         switch.save()
 
+        self.log_info("Created switch", switch)
+
         mgmt_interface_name = "irb"
         if switch.device_type.model in IRB_MODELS:
             mgmt_interface_name = "vlan"
@@ -401,12 +405,12 @@ class CreateSwitch(Script):
         switch.primary_ip6 = v6_mgmt_addr
         switch.save()
 
-        self.log_info("Created switch")
         self.log_info("Allocated and assigned mgmt addresses on switch")
         return switch
 
     def create_vlan(self, switch):
         vid = FABRIC_VLAN_GROUP.get_next_available_vid()
+        self.log_debug(f'VLAN ID picked from create_vlan(): {vid}')
         vlan = VLAN.objects.create(
             name=switch.name,
             group=FABRIC_VLAN_GROUP,
@@ -414,7 +418,7 @@ class CreateSwitch(Script):
             vid=vid
         )
         vlan.save()
-        self.log_info("Created VLAN")
+        self.log_info("Created VLAN", vlan)
         return vlan
 
     def set_traffic_vlan(self, switch, vlan):
