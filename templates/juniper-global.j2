@@ -210,11 +210,12 @@ protocols {
             no-root-port;
         }
     {% elif device.role.slug == "utskutt-distro" %}
-        bridge-priority 8k;
+        bridge-priority 16k;
+        interface all;
     {% elif device.role.slug == "distro" %}
-        bridge-priority 4k;
+        bridge-priority 8k;
+        interface all;
     {% endif %}
-
     }
     lldp {
         port-id-subtype interface-name;
