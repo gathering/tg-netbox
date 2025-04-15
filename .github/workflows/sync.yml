@@ -7,5 +7,6 @@ on:
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
-    steps:
-      - run: curl -X POST -H "Authorization: Token ${{ secrets.NETBOX_TOKEN }}" -H "Content-Type: application/json" https://netbox.tg25.tg.no/api/core/data-sources/1/sync/
+    steps: 
+      - run: >
+          curl -X POST -H "Authorization: Token ${{ secrets.NETBOX_TOKEN }}" -H "Content-Type: application/json" https://netbox.tg25.tg.no/api/core/data-sources/1/sync/
