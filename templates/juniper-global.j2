@@ -203,6 +203,7 @@ protocols {
 
 protocols {
     rstp {
+        interface all;
     {% if device.role.slug == "access-switch" %}
         bridge-priority 32k;
         interface edge-ports {
