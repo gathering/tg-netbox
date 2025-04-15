@@ -238,23 +238,24 @@ class CreateSwitch(Script):
             untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
         )
         switch_uplink_lag.save()
+        
+        switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
 
         ae_device = uplink_device_a
         if uplink_device_a.virtual_chassis:
             ae_device = uplink_device_a.virtual_chassis.master
 
-        ## Add vlan upstream if not connected to leaf
-        if uplink_device_a.role.slug != DEVICE_ROLE_LEAF:
-            lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
-            lag_on_uplink_device.tagged_vlans.add(vlan.id)
-
-        ## if utskutt distro, add even more upstream
-        if uplink_device_a.role.slug == DEVICE_ROLE_UTSKUTT_DISTRO:
-            ring_fabric_uplink = Interface.objects.get(device__name="d1-ring-noc", name="ae0")
-            ring_fabric_uplink.tagged_vlans.add(vlan.id)
-
-        switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
         if switch.role.slug == DEVICE_ROLE_ACCESS:
+            ## Add vlan upstream if not connected to leaf
+            if uplink_device_a.role.slug != DEVICE_ROLE_LEAF:
+                lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
+                lag_on_uplink_device.tagged_vlans.add(vlan.id)
+
+            ## if utskutt distro, add even more upstream
+            if uplink_device_a.role.slug == DEVICE_ROLE_UTSKUTT_DISTRO:
+                ring_fabric_uplink = Interface.objects.get(device__name="d1-ring-noc", name="ae0")
+                ring_fabric_uplink.tagged_vlans.add(vlan.id)
+
             switch_uplink_lag.tagged_vlans.add(vlan.id)
 
         possible_uplink_types = []
