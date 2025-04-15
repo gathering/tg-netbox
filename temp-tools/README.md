@@ -42,5 +42,3 @@ Adds all the switches created by "planning" (see tgmanage repo) to netbox via th
               'v6_mgmt': '2a06:5841:f:10:1::3/64',
               'vlan': '1012'},
     [...]
-
-Then something something(tm) to post it to Netbox, with some error handling 
