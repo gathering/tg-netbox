@@ -238,7 +238,6 @@ class CreateSwitch(Script):
             untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
         )
         switch_uplink_lag.save()
-        
         switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
 
         ae_device = uplink_device_a
@@ -341,7 +340,8 @@ class CreateSwitch(Script):
             vc = VirtualChassis.objects.get(id=uplink_device_a.virtual_chassis.id)
             self.log_debug(f"vc {vc}")
             for member in vc.members.all():
-                interfaces = interfaces + list(Interface.objects.filter(device=member, type=InterfaceTypeChoices.TYPE_LAG))
+                interfaces = interfaces + list(
+                    Interface.objects.filter(device=member, type=InterfaceTypeChoices.TYPE_LAG))
         else:
             interfaces = list(Interface.objects.filter(device=uplink_device_a, type=InterfaceTypeChoices.TYPE_LAG))
 
