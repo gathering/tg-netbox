@@ -96,10 +96,10 @@ class CreateSwitch(Script):
         scheduling_enabled = False
 
     switch_name = StringVar(
-        description="Switch name. Remember, e = access switch, d = distro switch. Regex: '^[ed]\d{1,2}\-'",
+        description="Switch name. Remember, e = access switch, d = distro switch. Regex: '^[ed]\\d{1,2}\\-'",
         required=True,
         default=DEFAULT_SWITCH_NAME,
-        regex="^[ed]\d{1,2}\-"
+        regex="^[ed]\\d{1,2}\\-"
     )
     device_type = ObjectVar(
         description="Device model",
