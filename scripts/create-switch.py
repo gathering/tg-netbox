@@ -83,8 +83,6 @@ UPLINK_SUPPORT_MATRIX = {
 
 def generatePrefix(prefix, length):
     firstPrefix = prefix.get_first_available_prefix()
-    if firstPrefix is None:
-        print(f"No prefixes available in {prefix}")
     out = list(firstPrefix.subnet(length, count=1))[0]
     return out
 
