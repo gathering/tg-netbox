@@ -1,8 +1,8 @@
 import pynetbox
+import os
 
-# Connect to NetBox
-NETBOX_URL = "https://netbox.tg25.tg.no"
-NETBOX_TOKEN = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa"
+NETBOX_TOKEN = os.getenv("NETBOX_API_TOKEN")
+NETBOX_URL = os.getenv("NETBOX_SERVER_URL")
 
 nb = pynetbox.api(NETBOX_URL, token=NETBOX_TOKEN)
 

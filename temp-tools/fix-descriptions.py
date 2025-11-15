@@ -1,8 +1,9 @@
 import pynetbox
 import re
+import os
 
-NETBOX_URL = "https://netbox.tg25.tg.no"
-NETBOX_TOKEN = "removed"
+NETBOX_TOKEN = os.getenv("NETBOX_API_TOKEN")
+NETBOX_URL = os.getenv("NETBOX_SERVER_URL")
 
 nb = pynetbox.api(NETBOX_URL, token=NETBOX_TOKEN)
 
