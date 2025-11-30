@@ -1,0 +1,103 @@
+services:
+  netbox:
+    image: netboxcommunity/netbox:latest
+    container_name: tg26-prod-netbox
+    restart: unless-stopped
+    environment:
+      ALLOWED_HOSTS: "*"
+      DB_HOST: "db"
+      DB_NAME: "netbox"
+      DB_USER: "netbox"
+      DB_PASSWORD: "netboxpassword"
+      DB_WAIT_DEBUG: "1"
+      SECRET_KEY: "CGW0dozW%HmqYNF2x9qj&eZWItwwi4_MGw_qS64Ubuivsa30x)"
+      REDIS_HOST: "cache"
+      REDIS_PORT: "6379"
+      VIRTUAL_HOST: "netbox.tg26.tg.no"
+      LETSENCRYPT_HOST: "netbox.tg26.tg.no"
+      LETSENCRYPT_EMAIL: "kimandre.tangnes@gmail.com"
+      VIRTUAL_PORT: "8080"
+
+    depends_on:
+      - db
+    volumes:
+      - netbox-media:/opt/netbox/netbox/media
+      - netbox-static:/opt/netbox/netbox/static
+    networks:
+      - webproxy
+
+  db:
+    image: postgres:latest
+    container_name: tg26-prod-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=netbox
+      - POSTGRES_USER=netbox
+      - POSTGRES_PASSWORD=netboxpassword
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks:
+      - webproxy
+  
+  cache:
+    image: redis:latest
+    container_name: tg26-prod-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - webproxy
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy:latest
+    container_name: tg26-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-proxy_certs:/etc/nginx/certs:rw
+      - nginx-proxy_vhost:/etc/nginx/vhost.d:rw
+      - nginx-proxy_html:/usr/share/nginx/html:rw
+      - nginx-proxy_conf:/etc/nginx/conf.d:rw
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - webproxy
+
+  acme:
+    image: nginxproxy/acme-companion:latest
+    container_name: tg26-acme-companion
+    restart: unless-stopped
+    environment:
+      NGINX_PROXY_CONTAINER: tg26-nginx-proxy
+      DEFAULT_EMAIL: "kimandre.tangnes@gmail.com"
+    volumes:
+      - nginx-proxy_certs:/etc/nginx/certs:rw
+      - nginx-proxy_vhost:/etc/nginx/vhost.d:rw
+      - nginx-proxy_html:/usr/share/nginx/html:rw
+      - nginx-proxy_conf:/etc/nginx/conf.d:rw
+      - acme_state:/etc/acme.sh:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - webproxy
+    depends_on:
+      - nginx-proxy
+
+volumes:
+  pgdata:
+  netbox-media:
+  netbox-static:
+  redisdata:
+  nginx-proxy_certs:
+  nginx-proxy_vhost:
+  nginx-proxy_html:
+  nginx-proxy_conf:
+  acme_state:
+
+networks:
+  webproxy:
+    external: true
