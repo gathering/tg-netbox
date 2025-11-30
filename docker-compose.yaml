@@ -10,7 +10,7 @@ services:
       DB_USER: "netbox"
       DB_PASSWORD: "netboxpassword"
       DB_WAIT_DEBUG: "1"
-      SECRET_KEY: "CGW0dozW%HmqYNF2x9qj&eZWItwwi4_MGw_qS64Ubuivsa30x)"
+      SECRET_KEY: ""
       REDIS_HOST: "cache"
       REDIS_PORT: "6379"
       VIRTUAL_HOST: "netbox.tg26.tg.no"
