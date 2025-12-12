@@ -1,0 +1,2 @@
+Denne mappa inneholder compose override fil og env filer relatert til oppsett av netbox.
+Legg disse i samme mappe som docker-repoet til netbox og kjør docker-compose fila inkludert i det repoet. Kjør deretter docker-compose.override.yml for å legge på LDAP, NGINX og Acme.

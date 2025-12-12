@@ -1,0 +1,55 @@
+services:
+  netbox:
+    networks:
+      - webproxy
+  netbox-worker:
+    networks:
+      - webproxy
+  
+  postgres:
+    networks:
+      - webproxy
+  
+  redis:
+    networks:
+      - webproxy
+
+  redis-cache:
+    networks:
+      - webproxy
+
+  
+  nginx-proxy:
+    image: jwilder/nginx-proxy:latest
+    container_name: tg26-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-proxy_certs:/etc/nginx/certs:rw
+      - nginx-proxy_vhost:/etc/nginx/vhost.d:rw
+      - nginx-proxy_html:/usr/share/nginx/html:rw
+      - nginx-proxy_conf:/etc/nginx/conf.d:rw
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - webproxy
+
+  acme:
+    image: nginxproxy/acme-companion:latest
+    container_name: tg26-acme-companion
+    restart: unless-stopped
+    environment:
+      NGINX_PROXY_CONTAINER: tg26-nginx-proxy
+      DEFAULT_EMAIL: "epost@eksempel.no"
+    volumes:
+      - nginx-proxy_certs:/etc/nginx/certs:rw
+      - nginx-proxy_vhost:/etc/nginx/vhost.d:rw
+      - nginx-proxy_html:/usr/share/nginx/html:rw
+      - nginx-proxy_conf:/etc/nginx/conf.d:rw
+      - acme_state:/etc/acme.sh:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - webproxy
+    depends_on:
+      - nginx-proxy
