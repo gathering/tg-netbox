@@ -35,30 +35,33 @@ DEVICE_ROLE_DISTRO = "distro"
 DEVICE_ROLE_LEAF = "leaf"
 DEVICE_ROLE_UTSKUTT_DISTRO = "utskutt-distro"
 
-# VLAN Group to allocate VLANs from
-FABRIC_VLAN_GROUP = VLANGroup.objects.get(slug='client-vlans')
-
-# Vlan role for fabric clients
-FABRIC_CLIENTS_ROLE = Role.objects.get(slug='clients')
-
-# VRF for fabric clients
-FABRIC_CLIENTS_VRF = VRF.objects.get(name='CLIENTS')
-
-# VRF for internet clients on the fabric
-FABRIC_INET_VRF = VRF.objects.get(name='INET')
-
-# Client networks allocated from here
-FABRIC_V4_CLIENTS_PREFIX = Prefix.objects.get(prefix__family=4, prefix='10.25.0.0/16', vrf=FABRIC_CLIENTS_VRF)
-FABRIC_V6_CLIENTS_PREFIX = Prefix.objects.get(prefix__family=6, prefix='2a06:5844:e::/48', vrf=FABRIC_CLIENTS_VRF)
-
-# Switch mgmt allocates from here
-FABRIC_V4_JUNIPER_MGMT_PREFIX = Prefix.objects.get(prefix__family=4, prefix='185.110.149.0/24', vrf=FABRIC_CLIENTS_VRF)
-FABRIC_V6_JUNIPER_MGMT_PREFIX = Prefix.objects.get(prefix__family=6, prefix='2a06:5841:f::/64', vrf=FABRIC_CLIENTS_VRF)
-
 UPLINK_PORTS = {
     'EX2200-48T-4G': ["ge-0/0/44", "ge-0/0/45", "ge-0/0/46", "ge-0/0/47"],
     'EX3300-48P': ["xe-0/1/0", "xe-0/1/1"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
 }
+
+# !! !! !! These objects have to exist in Netbox for the script to work !! !! !!
+# Creating these as lambdas to not crash on script load if the objects do not exist.
+
+# VLAN Group to allocate VLANs from
+FABRIC_VLAN_GROUP = lambda: VLANGroup.objects.get(slug='client-vlans')
+
+# Vlan role for fabric clients
+FABRIC_CLIENTS_ROLE = lambda: Role.objects.get(slug='clients')
+
+# VRF for fabric clients
+FABRIC_CLIENTS_VRF = lambda: VRF.objects.get(name='CLIENTS')
+
+# VRF for internet clients on the fabric
+FABRIC_INET_VRF = lambda: VRF.objects.get(name='INET')
+
+# Client networks allocated from here
+FABRIC_V4_CLIENTS_PREFIX = lambda: Prefix.objects.get(prefix__family=4, prefix='10.25.0.0/16', vrf=FABRIC_CLIENTS_VRF())
+FABRIC_V6_CLIENTS_PREFIX = lambda: Prefix.objects.get(prefix__family=6, prefix='2a06:5844:e::/48', vrf=FABRIC_CLIENTS_VRF())
+
+# Switch mgmt allocates from here
+FABRIC_V4_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=4, prefix='185.110.149.0/24', vrf=FABRIC_CLIENTS_VRF())
+FABRIC_V6_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=6, prefix='2a06:5841:f::/64', vrf=FABRIC_CLIENTS_VRF())
 
 IRB_MODELS = ["EX2200-48T-4G", "EX3300-48P"]
 
@@ -203,17 +206,17 @@ class CreateSwitch(Script):
 
     def allocate_prefixes(self, vlan):
         v6_prefix = Prefix.objects.create(
-            prefix=generatePrefix(FABRIC_V6_CLIENTS_PREFIX, 64),
+            prefix=generatePrefix(FABRIC_V6_CLIENTS_PREFIX(), 64),
             status=PrefixStatusChoices.STATUS_ACTIVE,
-            role=FABRIC_CLIENTS_ROLE,
-            vrf=FABRIC_CLIENTS_VRF,
+            role=FABRIC_CLIENTS_ROLE(),
+            vrf=FABRIC_CLIENTS_VRF(),
             vlan=vlan
         )
         v4_prefix = Prefix.objects.create(
-            prefix=generatePrefix(FABRIC_V4_CLIENTS_PREFIX, 26),
+            prefix=generatePrefix(FABRIC_V4_CLIENTS_PREFIX(), 26),
             status=PrefixStatusChoices.STATUS_ACTIVE,
-            role=FABRIC_CLIENTS_ROLE,
-            vrf=FABRIC_CLIENTS_VRF,
+            role=FABRIC_CLIENTS_ROLE(),
+            vrf=FABRIC_CLIENTS_VRF(),
             vlan=vlan
         )
         self.log_info("Created network. Created new VLAN and assigned prefixes")
@@ -232,10 +235,10 @@ class CreateSwitch(Script):
             description=switch_uplink_description,
             type=InterfaceTypeChoices.TYPE_LAG,
             mode=InterfaceModeChoices.MODE_TAGGED,
-            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
+            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX().vlan,
         )
         switch_uplink_lag.save()
-        switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
+        switch_uplink_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX().vlan.id)
 
         ae_device = uplink_device_a
         if uplink_device_a.virtual_chassis:
@@ -379,20 +382,20 @@ class CreateSwitch(Script):
 
         mgmt_vlan_interface = Interface.objects.create(
             device=switch,
-            name=f"{mgmt_interface_name}.{FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.vid}",
+            name=f"{mgmt_interface_name}.{FABRIC_V4_JUNIPER_MGMT_PREFIX().vlan.vid}",
             description=f'X: Mgmt',
             type=InterfaceTypeChoices.TYPE_VIRTUAL,
             mode=InterfaceModeChoices.MODE_ACCESS,
-            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
+            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX().vlan,
         )
         v4_mgmt_addr = IPAddress.objects.create(
-            address=FABRIC_V4_JUNIPER_MGMT_PREFIX.get_first_available_ip(),
-            vrf=FABRIC_V4_JUNIPER_MGMT_PREFIX.vrf,
+            address=FABRIC_V4_JUNIPER_MGMT_PREFIX().get_first_available_ip(),
+            vrf=FABRIC_V4_JUNIPER_MGMT_PREFIX().vrf,
             dns_name=f"{switch.name}.{DEFAULT_TG_DNS_SUFFIX}"
         )
         v6_mgmt_addr = IPAddress.objects.create(
-            address=FABRIC_V6_JUNIPER_MGMT_PREFIX.get_first_available_ip(),
-            vrf=FABRIC_V6_JUNIPER_MGMT_PREFIX.vrf,
+            address=FABRIC_V6_JUNIPER_MGMT_PREFIX().get_first_available_ip(),
+            vrf=FABRIC_V6_JUNIPER_MGMT_PREFIX().vrf,
             dns_name=f"{switch.name}.{DEFAULT_TG_DNS_SUFFIX}"
         )
         mgmt_vlan_interface.ip_addresses.add(v4_mgmt_addr)
@@ -406,11 +409,11 @@ class CreateSwitch(Script):
         return switch
 
     def create_vlan(self, switch):
-        vid = FABRIC_VLAN_GROUP.get_next_available_vid()
+        vid = FABRIC_VLAN_GROUP().get_next_available_vid()
         vlan = VLAN.objects.create(
             name=switch.name,
-            group=FABRIC_VLAN_GROUP,
-            role=FABRIC_CLIENTS_ROLE,
+            group=FABRIC_VLAN_GROUP(),
+            role=FABRIC_CLIENTS_ROLE(),
             vid=vid
         )
         vlan.save()
@@ -438,10 +441,10 @@ class CreateSwitch(Script):
             description=f'B: {switch.name} ae0',
             type=InterfaceTypeChoices.TYPE_LAG,
             mode=InterfaceModeChoices.MODE_TAGGED,
-            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan,
+            untagged_vlan=FABRIC_V4_JUNIPER_MGMT_PREFIX().vlan,
         )
         destination_lag.save()
-        destination_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX.vlan.id)
+        destination_lag.tagged_vlans.add(FABRIC_V4_JUNIPER_MGMT_PREFIX().vlan.id)
         if switch.role.slug == DEVICE_ROLE_ACCESS:
             destination_lag.tagged_vlans.add(vlan.id)
         self.log_debug(
