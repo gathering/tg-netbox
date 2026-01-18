@@ -25,10 +25,7 @@ from utilities.exceptions import AbortScript
 # ✅ Utskutt distro (nice to have)
 
 DEFAULT_SWITCH_NAME = "e1-changemyname"
-DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
-DEFAULT_DEVICE_ROLE = DeviceRole.objects.get(slug='access-switch')
 DEFAULT_TG_DNS_SUFFIX = "tg25.tg.no"
-DEFAULT_UPLINK_SWITCH = Device.objects.get(name='d1-ring-noc')
 
 DEVICE_ROLE_ACCESS = "access-switch"
 DEVICE_ROLE_DISTRO = "distro"
@@ -62,6 +59,16 @@ FABRIC_V6_CLIENTS_PREFIX = lambda: Prefix.objects.get(prefix__family=6, prefix='
 # Switch mgmt allocates from here
 FABRIC_V4_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=4, prefix='185.110.149.0/24', vrf=FABRIC_CLIENTS_VRF())
 FABRIC_V6_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=6, prefix='2a06:5841:f::/64', vrf=FABRIC_CLIENTS_VRF())
+
+# Don't default if the defaults don't exist
+try:
+    DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G').id
+    DEFAULT_DEVICE_ROLE = DeviceRole.objects.get(slug='access-switch').id
+    DEFAULT_UPLINK_SWITCH = Device.objects.get(name='d1-ring-noc')
+except:
+    DEFAULT_DEVICE_TYPE = None
+    DEFAULT_DEVICE_ROLE = None
+    DEFAULT_UPLINK_SWITCH = None
 
 IRB_MODELS = ["EX2200-48T-4G", "EX3300-48P"]
 
@@ -106,12 +113,12 @@ class CreateSwitch(Script):
     device_type = ObjectVar(
         description="Device model",
         model=DeviceType,
-        default=DEFAULT_DEVICE_TYPE.id,
+        default=DEFAULT_DEVICE_TYPE,
     )
     device_role = ObjectVar(
         description="Device role",
         model=DeviceRole,
-        default=DEFAULT_DEVICE_ROLE.id,
+        default=DEFAULT_DEVICE_ROLE,
     )
     uplink_type = MultiChoiceVar(
         label='Uplink Type',
@@ -127,7 +134,7 @@ class CreateSwitch(Script):
         query_params={
             'role': [DEVICE_ROLE_LEAF, DEVICE_ROLE_DISTRO, DEVICE_ROLE_UTSKUTT_DISTRO],
         },
-        default=DEFAULT_UPLINK_SWITCH
+        default=DEFAULT_UPLINK_SWITCH,
     )
     destination_device_b = ObjectVar(
         description="If connected to leaf pair - Uplink device (B)",
