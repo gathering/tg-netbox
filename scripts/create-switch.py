@@ -25,7 +25,6 @@ from utilities.exceptions import AbortScript
 # ✅ Utskutt distro (nice to have)
 
 DEFAULT_SWITCH_NAME = "e1-changemyname"
-DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
 DEFAULT_DEVICE_TYPE = DeviceType.objects.get(model='EX2200-48T-4G')
 DEFAULT_DEVICE_ROLE = DeviceRole.objects.get(slug='access-switch')
 DEFAULT_TG_DNS_SUFFIX = "tg25.tg.no"
@@ -357,6 +356,8 @@ class CreateSwitch(Script):
         return f"{lag_prefix}{next_free}"
 
     def create_switch(self, switch_name, device_type, device_role, destination_device_a):
+        DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
+
         if switch_name == DEFAULT_SWITCH_NAME:
             switch_name = f"e1.test-{''.join(random.sample(string.ascii_uppercase * 6, 6))}"
 
