@@ -1,0 +1,57 @@
+- name: Load devicetype file
+  ansible.builtin.include_vars:
+    file: "{{ devicetype_file.path }}"
+    name: devicetype
+
+- name: Create device type
+  netbox.netbox.netbox_device_type:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      manufacturer: "{{ devicetype.manufacturer }}"
+      model: "{{ devicetype.model }}"
+      slug: "{{ devicetype.slug }}"
+      description: "{{ devicetype.description | default(omit) }}"
+      part_number: "{{ devicetype.part_number | default(omit) }}"
+      u_height: "{{ devicetype.u_height | default(1) }}"
+      is_full_depth: "{{ devicetype.is_full_depth | default(true) }}"
+      airflow: "{{ devicetype.airflow if devicetype.airflow is not none else omit }}"
+      weight: "{{ devicetype.weight if devicetype.weight is not none else omit }}"
+      weight_unit: "{{ devicetype.weight_unit if devicetype.weight_unit is not none else omit }}"
+      comments: "{{ devicetype.comments | default(omit) }}"
+    state: present
+
+- name: Create interface templates
+  netbox.netbox.netbox_device_interface_template:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      device_type: "{{ devicetype.slug }}"
+      name: "{{ item.name }}"
+      type: "{{ item.type }}"
+      mgmt_only: "{{ item.mgmt_only | default(false) }}"
+    state: present
+  loop: "{{ devicetype.interfaces | default([]) }}"
+
+- name: Create power port templates
+  netbox.netbox.netbox_power_port_template:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      device_type: "{{ devicetype.slug }}"
+      name: "{{ item.name }}"
+      type: "{{ item.type }}"
+      maximum_draw: "{{ item.maximum_draw | default(omit) }}"
+    state: present
+  loop: "{{ devicetype['power-ports'] | default([]) }}"
+
+- name: Create console port templates
+  netbox.netbox.netbox_console_port_template:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      device_type: "{{ devicetype.slug }}"
+      name: "{{ item.name }}"
+      type: "{{ item.type }}"
+    state: present
+  loop: "{{ devicetype['console-ports'] | default([]) }}"

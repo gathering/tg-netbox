@@ -1,0 +1,192 @@
+---
+- name: Import patch Panel into NetBox
+  ansible.builtin.include_vars:
+    file: "{{ devicetype_file.path }}"
+    name: item
+
+- name: Look up manufacturer
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/manufacturers/?name={{ item.manufacturer }}"
+    method: GET
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+    return_content: true
+  register: manufacturer_lookup
+  failed_when: manufacturer_lookup.status not in [200]
+
+- name: Assert manufacturer exists
+  ansible.builtin.assert:
+    that:
+      - manufacturer_lookup.json.count | int > 0
+    fail_msg: "Manufacturer '{{ item.manufacturer }}' not found in NetBox"
+
+- name: Get manufacturer ID
+  ansible.builtin.set_fact:
+    manufacturer_id: "{{ manufacturer_lookup.json.results[0].id }}"
+
+- name: Check if device type exists
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/device-types/?slug={{ item.slug }}"
+    method: GET
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+    return_content: true
+  register: device_type_lookup
+
+- name: Set device_type_id
+  ansible.builtin.set_fact:
+    device_type_id: >-
+      {{
+        (device_type_lookup.json.results[0].id)
+        if device_type_lookup.json.count | int > 0
+        else None
+      }}
+
+- name: Create device type if missing
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/device-types/"
+    method: POST
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      manufacturer: "{{ manufacturer_id }}"
+      model: "{{ item.model }}"
+      slug: "{{ item.slug }}"
+      u_height: "{{ item.u_height | default(1) }}"
+      is_full_depth: "{{ item.is_full_depth | default(true) }}"
+    return_content: true
+  register: device_type_create
+  failed_when: device_type_create.status not in [201, 400]
+  when: device_type_id is none
+
+#Always fetch device_type_id after creation/check
+- name: Ensure device_type_id is set
+  ansible.builtin.set_fact:
+    device_type_id: >-
+      {{
+        device_type_lookup.json.results[0].id
+        if device_type_lookup.json.count | int > 0
+        else device_type_create.json.id
+      }}
+
+- name: Check if rear port template exists
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/rear-port-templates/?device_type_id={{ device_type_id }}&name={{ item['rear-ports'][0].name if item['rear-ports'] is defined else '' }}"
+    method: GET
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+    return_content: true
+  register: rear_port_lookup
+
+- name: Set rear_port_id
+  ansible.builtin.set_fact:
+    rear_port_id: >-
+      {{
+        (rear_port_lookup.json.results[0].id)
+        if rear_port_lookup.json.count | int > 0
+        else None
+      }}
+
+- name: Create rear port templates
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/rear-port-templates/"
+    method: POST
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      device_type: "{{ device_type_id | int }}"
+      name: "{{ rp.name }}"
+      type: "{{ rp.type }}"
+      positions: "{{ rp.positions }}"
+    return_content: true
+  register: rear_port_result
+  failed_when: >
+    rear_port_result.status == 400 and
+    (
+      rear_port_result.json.name is not defined or
+      'already exists' not in rear_port_result.json.name[0]
+    )
+  loop: "{{ item['rear-ports'] | default([]) }}"
+  loop_control:
+    loop_var: rp
+  when: rear_port_id is none
+
+- name: Fetch rear port templates for device type
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/rear-port-templates/?device_type_id={{ device_type_id }}"
+    method: GET
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+    return_content: true
+  register: rear_port_templates
+
+- name: Check if front port template exists
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/front-port-templates/?device_type_id={{ device_type_id }}&name={{ item['front-ports'][0].name if item['front-ports'] is defined else '' }}"
+    method: GET
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+    return_content: true
+  register: front_port_lookup
+
+- name: Set front_port_id
+  ansible.builtin.set_fact:
+    front_port_id: >-
+      {{
+        (front_port_lookup.json.results[0].id)
+        if front_port_lookup.json.count | int > 0
+        else None
+      }}
+
+- name: Build rear port ID map
+  ansible.builtin.set_fact:
+    rear_port_id_map: >-
+      {{
+        dict(
+          rear_port_templates.json.results
+          | map(attribute='name')
+          | zip(rear_port_templates.json.results | map(attribute='id'))
+        )
+      }}
+
+- name: Validate front ports reference valid rear ports
+  ansible.builtin.assert:
+    that:
+      - fp.rear_port in rear_port_id_map
+    fail_msg: >
+      Front port '{{ fp.name }}' references unknown rear port
+      '{{ fp.rear_port }}'
+  loop: "{{ item['front-ports'] | default([]) }}"
+  loop_control:
+    loop_var: fp
+
+- name: Create front port templates
+  ansible.builtin.uri:
+    url: "{{ netbox_url }}/api/dcim/front-port-templates/"
+    method: POST
+    headers:
+      Authorization: "Token {{ netbox_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      device_type: "{{ device_type_id | int }}"
+      name: "{{ fp.name }}"
+      type: "{{ fp.type }}"
+      rear_port: "{{ rear_port_id_map[fp.rear_port] }}"
+      rear_port_position: "{{ fp.rear_port_position }}"
+    return_content: true
+  register: front_port_result
+  failed_when: >
+    front_port_result.status == 400 and
+    (
+      front_port_result.json.name is not defined or
+      'already exists' not in front_port_result.json.name[0]
+    )
+  loop: "{{ item['front-ports'] | default([]) }}"
+  loop_control:
+    loop_var: fp
+  when: front_port_id is none

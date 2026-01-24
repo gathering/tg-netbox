@@ -1,0 +1,22 @@
+---
+- name: Import Device Types into NetBox
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    netbox_url: "{{ lookup('env', 'NETBOX_SERVER_URL') }}"
+    netbox_token: "{{ lookup('env', 'NETBOX_API_TOKEN') }}"
+
+  tasks:
+    - name: Find device type files
+      ansible.builtin.find:
+        paths: device_types
+        patterns: "*.yml,*.yaml"
+        recurse: true
+      register: devicetype_files
+
+    - name: Import each device type
+      include_tasks: import_single_devicetype.yaml
+      loop: "{{ devicetype_files.files }}"
+      loop_control:
+        loop_var: devicetype_file

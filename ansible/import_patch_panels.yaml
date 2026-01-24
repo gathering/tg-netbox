@@ -1,0 +1,23 @@
+---
+- name: Import Patch Panels into NetBox
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    netbox_url: "{{ lookup('env', 'NETBOX_SERVER_URL') }}"
+    netbox_token: "{{ lookup('env', 'NETBOX_API_TOKEN') }}"
+
+  tasks:
+    - name: Find device type files
+      ansible.builtin.find:
+        paths: patch-panels
+        patterns: "*.yml,*.yaml"
+        recurse: true
+      register: patchpanel_files
+    
+
+    - name: Import each device type
+      include_tasks: restAPI_upload_patch_panel.yaml
+      loop: "{{ patchpanel_files.files }}"
+      loop_control:
+        loop_var: devicetype_file
