@@ -1,0 +1,64 @@
+---
+manufacturer: Generic
+model: fiberpatch 6 par
+slug: fiberpatch-6-par
+description: 6 pair SC-UPC for G12 cable
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+front-ports:
+- name: port1
+  type: sc-upc
+  color: ''
+  rear_port: G12
+  rear_port_position: 1
+  label: ''
+  description: ''
+- name: port2
+  type: sc-upc
+  color: ''
+  rear_port: G12
+  rear_port_position: 2
+  label: ''
+  description: ''
+- name: port3
+  type: sc-upc
+  color: ''
+  rear_port: G12
+  rear_port_position: 3
+  label: ''
+  description: ''
+- name: port4
+  type: sc-upc
+  color: ''
+  rear_port: G12
+  rear_port_position: 4
+  label: ''
+  description: ''
+- name: port5
+  type: sc-upc
+  color: ''
+  rear_port: G12
+  rear_port_position: 5
+  label: ''
+  description: ''
+- name: port6
+  type: sc-upc
+  color: ''
+  rear_port: G12
+  rear_port_position: 6
+  label: ''
+  description: ''
+rear-ports:
+- name: G12
+  type: other
+  color: ''
+  positions: 6
+  label: ''
+  description: ''

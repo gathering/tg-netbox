@@ -1,0 +1,64 @@
+---
+manufacturer: Generic
+model: MPO-12
+slug: mpo-12
+description: MPO to LC cassette
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+front-ports:
+- name: port1
+  type: lc-upc
+  color: ''
+  rear_port: MPO
+  rear_port_position: 1
+  label: ''
+  description: ''
+- name: port2
+  type: lc-upc
+  color: ''
+  rear_port: MPO
+  rear_port_position: 2
+  label: ''
+  description: ''
+- name: port3
+  type: lc-upc
+  color: ''
+  rear_port: MPO
+  rear_port_position: 3
+  label: ''
+  description: ''
+- name: port4
+  type: lc-upc
+  color: ''
+  rear_port: MPO
+  rear_port_position: 4
+  label: ''
+  description: ''
+- name: port5
+  type: lc-upc
+  color: ''
+  rear_port: MPO
+  rear_port_position: 5
+  label: ''
+  description: ''
+- name: port6
+  type: lc-upc
+  color: ''
+  rear_port: MPO
+  rear_port_position: 6
+  label: ''
+  description: ''
+rear-ports:
+- name: MPO
+  type: mpo
+  color: ''
+  positions: 6
+  label: ''
+  description: ''

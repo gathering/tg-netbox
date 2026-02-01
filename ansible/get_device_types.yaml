@@ -1,0 +1,76 @@
+- name: Get device types
+  hosts: localhost
+  gather_facts: false
+
+  vars_files:
+    - models.yaml
+
+  tasks:
+    - name: Sync NetBox device type library
+      ansible.builtin.git:
+        repo: https://github.com/netbox-community/devicetype-library.git
+        dest: ./devicetype-library
+        version: master
+        update: yes
+
+    - name: Find all device type YAML files
+      ansible.builtin.find:
+        paths: ./devicetype-library/device-types
+        patterns: "*.yaml"
+        recurse: true
+      register: all_device_type_files
+
+    - name: Build model-to-file map
+      ansible.builtin.set_fact:
+        model_file_map: >-
+          {{
+            dict(
+              all_device_type_files.files
+              | map(attribute='path')
+              | map('basename')
+              | map('regex_replace', '.yaml', '')
+              | zip(all_device_type_files.files | map(attribute='path'))
+            )
+          }}
+
+    - name: Show all available model filenames
+      ansible.builtin.debug:
+        msg: "{{ model_file_map.keys() | list }}"
+
+    - name: Select requested device type files
+      ansible.builtin.set_fact:
+        selected_device_type_files: >-
+          {{
+            models
+            | select('in', model_file_map.keys())
+            | map('extract', model_file_map)
+            | list
+          }}
+
+    - name: Show all selected model files
+      ansible.builtin.debug:
+        msg: "{{ selected_device_type_files[0] | regex_replace('^.*/device-types/([^/]+)/.*$', '\\1') }}"
+
+    - name: Assert all models were found
+      ansible.builtin.assert:
+        that:
+          - selected_device_type_files | length == models | length
+        fail_msg: >
+          Some models were not found.
+          Requested={{ models }}
+          Found={{ selected_device_type_files| map('basename') | list }}
+
+    - name: Ensure destination vendor directories exist
+      ansible.builtin.file:
+        path: "./device_types/{{ item | regex_replace('^.*/device-types/([^/]+)/.*$', '\\1') }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ selected_device_type_files }}"
+
+    - name: Copy selected device type files locally
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "./device_types/{{ item | regex_replace('^.*/device-types/', '') }}"
+        remote_src: true
+        mode: '0644'
+      loop: "{{ selected_device_type_files }}"
