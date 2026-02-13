@@ -78,3 +78,13 @@ resource "netbox_tag" "tags" {
   color_hex   = each.value.color
   description = each.value.description
 }
+
+resource "netbox_custom_field" "gondul_placement" {
+  name           = "gondul_placement"
+  type           = "json"
+  content_types  = ["dcim.device"]
+  weight         = 1000
+  default        = "{\n    \"height\": 20,\n    \"width\": 140,\n    \"x\": null,\n    \"y\": null\n}"
+  group_name     = "Gondul"
+  label          = "Gondul Placement"
+}
