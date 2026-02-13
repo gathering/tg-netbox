@@ -32,6 +32,8 @@ DEVICE_ROLE_DISTRO = "distro"
 DEVICE_ROLE_LEAF = "leaf"
 DEVICE_ROLE_UTSKUTT_DISTRO = "utskutt-distro"
 
+JUNIPER_CONFIG_TEMPLATE_NAME = "juniper"
+
 UPLINK_PORTS = {
     'EX2200-48T-4G': ["ge-0/0/44", "ge-0/0/45", "ge-0/0/46", "ge-0/0/47"],
     'EX3300-48P': ["xe-0/1/0", "xe-0/1/1"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
@@ -156,6 +158,7 @@ class CreateSwitch(Script):
     )
 
     def run(self, data, commit):
+        self.run_tests()
 
         switch_name = data['switch_name']
         device_type = data['device_type']
@@ -371,7 +374,7 @@ class CreateSwitch(Script):
         if switch_name == DEFAULT_SWITCH_NAME:
             switch_name = f"e1.test-{''.join(random.sample(string.ascii_uppercase * 6, 6))}"
 
-        config_template = ConfigTemplate.objects.get(name="juniper")
+        config_template = ConfigTemplate.objects.get(name=JUNIPER_CONFIG_TEMPLATE_NAME)
 
         switch = Device(
             name=switch_name,
@@ -457,6 +460,15 @@ class CreateSwitch(Script):
         self.log_debug(
             f"Created destination LAG <a href=\"{destination_lag.get_absolute_url()}\">{destination_lag}</a>")
         return destination_lag
+
+    def test_dependencies(self):
+        all_ok = True
+        if not ConfigTemplate.objects.filter(name=JUNIPER_CONFIG_TEMPLATE_NAME).exists():
+            self.log_failure(f"Required ConfigTemplate \"{JUNIPER_CONFIG_TEMPLATE_NAME}\" doesn't exist")
+            all_ok = False
+
+        if not all_ok:
+            raise AbortScript("Some validation failed. See the script results/log for more information")
 
 
 script = CreateSwitch
