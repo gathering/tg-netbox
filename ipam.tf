@@ -91,7 +91,7 @@ resource "netbox_prefix" "prefixes" {
   role_id     = each.value.role_id
 }
 
-resource "netbox_vlan_group" "Client VLANs" {
+resource "netbox_vlan_group" "Client_VLANs" {
   name    = "Client VLANs"
   slug    = "client-vlans"
   vid_ranges = [[200, 4094]]
