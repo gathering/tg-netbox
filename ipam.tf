@@ -94,5 +94,5 @@ resource "netbox_prefix" "prefixes" {
 resource "netbox_vlan_group" "Client VLANs" {
   name    = "Client VLANs"
   slug    = "client-vlans"
-  vid_ranges = ["200-4096"]
+  vid_ranges = [[200, 4094]]
 }
