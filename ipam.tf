@@ -53,6 +53,8 @@ locals {
     { description = "Linknets v6", prefix = "2a06:5841:f:100::/56", status = "container", role_id = netbox_ipam_role.roles["Linknet"].id },
     { description = "Loopbacks v4", prefix = "185.110.148.32/27", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
     { description = "Loopbacks v6", prefix = "2a06:5841:f:200::/64", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
+    { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id},
+    { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id},
   ]
 }
 
