@@ -53,8 +53,8 @@ locals {
     { description = "Linknets v6", prefix = "2a06:5841:f:100::/56", status = "container", role_id = netbox_ipam_role.roles["Linknet"].id },
     { description = "Loopbacks v4", prefix = "185.110.148.32/27", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
     { description = "Loopbacks v6", prefix = "2a06:5841:f:200::/64", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
-    { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id },
-    { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id },
+    { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.juniper-mgmt.id },
+    { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.juniper-mgmt.id },
   ]
 }
 
@@ -92,10 +92,18 @@ resource "netbox_prefix" "prefixes" {
   description = each.value.description
   role_id     = each.value.role_id
   vrf_id      = try(each.value.vrf_id, null)
+  vlan_id     = try(each.value.vlan_id, null)
 }
 
-resource "netbox_vlan_group" "Client VLANs" {
+resource "netbox_vlan_group" "Client_VLANs" {
   name    = "Client VLANs"
   slug    = "client-vlans"
-  vid_ranges = ["200-4096"]
+  vid_ranges = [[200, 4094]]
+}
+
+resource "netbox_vlan" "juniper-mgmt" {
+  name        = "juniper-mgmt"
+  vid         = 10
+  role_id     = netbox_ipam_role.roles["Juniper mgmt"].id
+  status      = "active"
 }
