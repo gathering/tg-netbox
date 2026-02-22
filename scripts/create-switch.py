@@ -17,6 +17,8 @@ import string
 
 from utilities.exceptions import AbortScript
 
+from extras.validators import CustomValidator
+
 ## Features
 # ✅ Edge switch on Ringen
 # ✅ Edge on "utskutt distro"
@@ -463,12 +465,37 @@ class CreateSwitch(Script):
 
     def test_dependencies(self):
         all_ok = True
-        if not ConfigTemplate.objects.filter(name=JUNIPER_CONFIG_TEMPLATE_NAME).exists():
-            self.log_failure(f"Required ConfigTemplate \"{JUNIPER_CONFIG_TEMPLATE_NAME}\" doesn't exist")
-            all_ok = False
+        checks = [
+            (lambda: ConfigTemplate.objects.filter(name=JUNIPER_CONFIG_TEMPLATE_NAME).exists(),
+             f"Required ConfigTemplate \"{JUNIPER_CONFIG_TEMPLATE_NAME}\" doesn't exist"),
+            (lambda: Role.objects.filter(slug=FABRIC_CLIENTS_ROLE().slug).exists(),
+             f"Role \"{FABRIC_CLIENTS_ROLE().slug}\" doesn't exist."),
+            (lambda: VRF.objects.filter(name=FABRIC_CLIENTS_VRF().name).exists(),
+             f"VRF \"{FABRIC_CLIENTS_VRF().name}\" doesn't exist."),
+            (lambda: VRF.objects.filter(name=FABRIC_INET_VRF().name).exists(),
+             f"VRF \"{FABRIC_INET_VRF().name}\" doesn't exist."),
+        ]
 
+        prefix_checks = [
+            FABRIC_V4_CLIENTS_PREFIX(),
+            FABRIC_V6_CLIENTS_PREFIX(),
+            FABRIC_V4_JUNIPER_MGMT_PREFIX(),
+            FABRIC_V6_JUNIPER_MGMT_PREFIX(),
+        ]
+        
+        for prefix in prefix_checks:
+            checks.append((
+                lambda p=prefix: Prefix.objects.filter(prefix=p.prefix).exists(),
+                f"Prefix \"{prefix.prefix}\" doesn't exist."
+            ))
+        
+        for check_fn, error_msg in checks:
+            if not check_fn():
+                self.log_failure(error_msg)
+                all_ok = False
+        
         if not all_ok:
-            raise AbortScript("Some validation failed. See the script results/log for more information")
-
+            raise AbortScript("Validation failed. See the script results/log for more information.")
+        return all_ok
 
 script = CreateSwitch
