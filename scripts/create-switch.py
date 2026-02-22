@@ -494,6 +494,8 @@ class CreateSwitch(Script):
                 self.log_failure(error_msg)
                 all_ok = False
         
+        if not all_ok:
+            raise AbortScript("Validation failed. See the script results/log for more information.")
         return all_ok
 
 script = CreateSwitch
