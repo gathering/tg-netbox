@@ -20,15 +20,15 @@ locals {
     { name = "Stand", site = "Vikingskipet", slug = "stand" },
     { name = "Stand-Altibox", site = "Vikingskipet", slug = "stand-altibox" },
     { name = "Tele", site = "Vikingskipet", slug = "tele" },
-    { name = "crewburet", site = "Vikingskipet", slug = "crewburet" },
-    { name = "log", site = "Vikingskipet", slug = "log" },
-    { name = "north", site = "Vikingskipet", slug = "north" },
-    { name = "reception", site = "Vikingskipet", slug = "reception" },
-    { name = "roof-north", site = "Vikingskipet", slug = "roof-north" },
-    { name = "roof-south", site = "Vikingskipet", slug = "roof-south" },
-    { name = "south", site = "Vikingskipet", slug = "south" },
-    { name = "swing", site = "Vikingskipet", slug = "swing" },
-    { name = "vrimle", site = "Vikingskipet", slug = "vrimle" }
+    { name = "Crewburet", site = "Vikingskipet", slug = "crewburet" },
+    { name = "Log", site = "Vikingskipet", slug = "log" },
+    { name = "North", site = "Vikingskipet", slug = "north" },
+    { name = "Reception", site = "Vikingskipet", slug = "reception" },
+    { name = "Roof-north", site = "Vikingskipet", slug = "roof-north" },
+    { name = "Roof-south", site = "Vikingskipet", slug = "roof-south" },
+    { name = "South", site = "Vikingskipet", slug = "south" },
+    { name = "Swing", site = "Vikingskipet", slug = "swing" },
+    { name = "Vrimle", site = "Vikingskipet", slug = "vrimle" }
   ]
   manufacturers = [
     { name = "Arista" , slug = "arista" },
@@ -41,7 +41,8 @@ locals {
      { name = "sc-sc-patch",slug = "sc-sc-patch",color = "009688",description = "SC to SC patch cable" },
      { name = "lc-lc-patch",slug = "lc-lc-patch",color = "ff5722",description = "LC to LC patch cable" },
      { name = "lc-sc-patch",slug = "lc-sc-patch",color = "00ffff",description = "LC to SC patch cable" },
-     { name = "tg-fiber",slug = "tg-fiber",color = "ffeb3b",description = "Permanently installed fiber" }
+     { name = "tg-fiber",slug = "tg-fiber",color = "ffeb3b",description = "Permanently installed fiber" },
+     { name = "MPO", slug = "mpo", color = "0000ff", description = "MPO fiber" }
   ]
 }
 
