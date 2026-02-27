@@ -21,6 +21,7 @@ locals {
     { name = "Linknet" },
     { name = "Loopback" },
     { name = "Servers" },
+    { name = "Arista Inbound mgmt" }
   ]
   as_nubmers = [
     { asn = 21067, rir = netbox_rir.kandu, description = "KANDU" },
@@ -53,8 +54,12 @@ locals {
     { description = "Linknets v6", prefix = "2a06:5841:f:100::/56", status = "container", role_id = netbox_ipam_role.roles["Linknet"].id },
     { description = "Loopbacks v4", prefix = "185.110.148.32/27", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
     { description = "Loopbacks v6", prefix = "2a06:5841:f:200::/64", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
-    { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.juniper-mgmt.id },
-    { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.juniper-mgmt.id },
+    { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.vlans["juniper-mgmt"].id },
+    { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.vlans["juniper-mgmt"].id },
+  ]
+  vlans = [
+    { name = "juniper-mgmt", vid = 10, role_id = netbox_ipam_role.roles["Juniper mgmt"].id, status = "active" },
+    { name = "arista-inbound-mgmt", vid = 20, role_id = netbox_ipam_role.roles["Arista Inbound mgmt"].id, status = "active" },
   ]
 }
 
@@ -84,6 +89,14 @@ resource "netbox_vrf" "vrfs" {
   description = each.value.description
 }
 
+resource "netbox_vlan" "vlans" {
+  for_each = { for vlan in local.vlans : tostring(vlan.name) => vlan }
+  name        = each.value.name
+  vid         = each.value.vid
+  role_id     = each.value.role_id
+  status      = each.value.status
+}
+
 resource "netbox_prefix" "prefixes" {
   for_each = { for prefix in local.prefixes : tostring(prefix.prefix) => prefix }
 
@@ -99,11 +112,4 @@ resource "netbox_vlan_group" "Client_VLANs" {
   name    = "Client VLANs"
   slug    = "client-vlans"
   vid_ranges = [[200, 4094]]
-}
-
-resource "netbox_vlan" "juniper-mgmt" {
-  name        = "juniper-mgmt"
-  vid         = 10
-  role_id     = netbox_ipam_role.roles["Juniper mgmt"].id
-  status      = "active"
 }
