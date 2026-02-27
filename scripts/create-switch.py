@@ -374,7 +374,7 @@ class CreateSwitch(Script):
         DEFAULT_SITE = Site.objects.get(name='Vikingskipet')
 
         if switch_name == DEFAULT_SWITCH_NAME:
-            switch_name = f"e1.test-{''.join(random.sample(string.ascii_uppercase * 6, 6))}"
+            switch_name = f"e1-test-{''.join(random.sample(string.ascii_uppercase * 6, 6))}"
 
         config_template = ConfigTemplate.objects.get(name=JUNIPER_CONFIG_TEMPLATE_NAME)
 
