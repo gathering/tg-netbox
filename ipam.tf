@@ -42,8 +42,8 @@ locals {
     { name = "default", description = "For underlay i fabricen" },
     { name = "CLIENTS", description = "Nett som lever i fabricen (v4 NAT)" },
     { name = "INET", description = "Nett som lever i fabricen - ingen v4 NAT" },
-    { name = "OOB MGMT", description = "Arista Management, Terminert på Internett ruter" },
-    { name = "INBAND MGMT", description = "Arista Inband Management, Terminert på Internett ruter", tags = ["no-export"] },
+    { name = "OOB_MGMT", description = "Arista Management, Terminert på Internett ruter" },
+    { name = "INBAND_MGMT", description = "Arista Inband Management, Terminert på Internett ruter", tags = ["no-export"] },
   ]
   prefixes = [
     { description = "RFC1918", prefix = "10.0.0.0/8", status = "container", role_id = null },
@@ -57,10 +57,10 @@ locals {
     { description = "Loopbacks v6", prefix = "2a06:5841:f:200::/64", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
     { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.vlans["juniper-mgmt"].id },
     { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.vlans["juniper-mgmt"].id },
-    { description = "Arista Inband mgmt v4", prefix = "185.110.148.96/27", status = "active", role_id = netbox_ipam_role.roles["Arista Inband mgmt"].id, vrf_id = netbox_vrf.vrfs["INBAND MGMT"].id , vlan_id = netbox_vlan.vlans["arista-inband-mgmt"].id },
-    { description = "Arista Inband mgmt v6", prefix = "2a06:5841:f:2::/64", status = "active", role_id = netbox_ipam_role.roles["Arista Inband mgmt"].id, vrf_id = netbox_vrf.vrfs["INBAND MGMT"].id , vlan_id = netbox_vlan.vlans["arista-inband-mgmt"].id },
-    { description = "Arista OOB mgmt v4", prefix = "185.110.148.64/27", status = "active", role_id = netbox_ipam_role.roles["Arista OOB mgmt"].id, vrf_id = netbox_vrf.vrfs["OOB MGMT"].id , vlan_id = netbox_vlan.vlans["arista-oob-mgmt"].id },
-    { description = "Arista OOB mgmt v6", prefix = "2a06:5841:f:1::/64", status = "active", role_id = netbox_ipam_role.roles["Arista OOB mgmt"].id, vrf_id = netbox_vrf.vrfs["OOB MGMT"].id , vlan_id = netbox_vlan.vlans["arista-oob-mgmt"].id },
+    { description = "Arista Inband mgmt v4", prefix = "185.110.148.96/27", status = "active", role_id = netbox_ipam_role.roles["Arista Inband mgmt"].id, vrf_id = netbox_vrf.vrfs["INBAND_MGMT"].id , vlan_id = netbox_vlan.vlans["arista-inband-mgmt"].id },
+    { description = "Arista Inband mgmt v6", prefix = "2a06:5841:f:2::/64", status = "active", role_id = netbox_ipam_role.roles["Arista Inband mgmt"].id, vrf_id = netbox_vrf.vrfs["INBAND_MGMT"].id , vlan_id = netbox_vlan.vlans["arista-inband-mgmt"].id },
+    { description = "Arista OOB mgmt v4", prefix = "185.110.148.64/27", status = "active", role_id = netbox_ipam_role.roles["Arista OOB mgmt"].id, vrf_id = netbox_vrf.vrfs["OOB_MGMT"].id , vlan_id = netbox_vlan.vlans["arista-oob-mgmt"].id },
+    { description = "Arista OOB mgmt v6", prefix = "2a06:5841:f:1::/64", status = "active", role_id = netbox_ipam_role.roles["Arista OOB mgmt"].id, vrf_id = netbox_vrf.vrfs["OOB_MGMT"].id , vlan_id = netbox_vlan.vlans["arista-oob-mgmt"].id },
   ]
   vlans = [
     { name = "juniper-mgmt", vid = 10, role_id = netbox_ipam_role.roles["Juniper mgmt"].id, status = "active" },

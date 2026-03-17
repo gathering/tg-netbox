@@ -9,7 +9,7 @@ resource "netbox_config_context" "global_context" {
         contact   = "Svettefesten i glassburet"
         location  = "LEGGETIIID!"
       },
-      domainName = "tg25.tg.no",
+      domainName = "tg26.tg.no",
       hashes = {
         handle_api  = "<removed>"
         handle_root = "<removed>"
