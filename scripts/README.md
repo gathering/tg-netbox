@@ -23,3 +23,10 @@ https://netbox.tg25.tg.no/api/extras/scripts/create-switch.CreateSwitch/ \
         "destination_interfaces" : "ge-0/0/46"
         }, "commit": true}
 EOF```
+
+## Sync Serial from CVP
+
+Sync serial numbers from CVP for registered arista devices.
+
+Requires the environment variable `NETBOX_CVP_API_TOKEN` to be set,
+and the token can be created in CVP -> Settings -> Access Management -> Service Accounts.
