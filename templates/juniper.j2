@@ -1,9 +1,20 @@
 {% include 'templates/juniper-global.j2' %}
 
-{% set edge_interfaces = namespace(data=[]) %}
+{% set interfaces = [] %}
+{% if device.virtual_chassis %}
+    {% for vc_member in dcim.VirtualChassis.objects.get(id=device.virtual_chassis.id).members.all() %}
+        {% for vc_interfaces in dcim.Interface.objects.filter(device_id=vc_member.id) %}
+            {% do interfaces.append(vc_interfaces) %}
+        {% endfor %}
+    {% endfor %}
+{% else %}
+    {% set interfaces = device.interfaces.filter() %}
+{% endif %}
+
+{% set edge_interfaces = [] %}
 {% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
     {% if interface.mode == "access" %}
-        {% set edge_interfaces.data = edge_interfaces.data + [interface] %}
+        {% do edge_interfaces.append(interface) %}
     {% endif %}
 {% endfor %}
 
@@ -144,15 +155,15 @@ ethernet-switching-options {
     }
 }
 
-{% set vlans = namespace(data=[]) %}
+{% set vlans = [] %}
 {% for interface in interfaces %}
     {% for vlan in interface.tagged_vlans.all() %}
         {% if vlan not in vlans %}
-            {% set vlans.data = vlans.data + [vlan] %}
+            {% do vlans.append(vlan) %}
         {% endif %}
     {% endfor %}
     {% if interface.untagged_vlan and interface.untagged_vlan not in vlans %}
-        {% set vlans.data = vlans.data + [interface.untagged_vlan] %}
+        {% do vlans.append(interface.untagged_vlan) %}
     {% endif %}
 {% endfor %}
 ethernet-switching-options {
