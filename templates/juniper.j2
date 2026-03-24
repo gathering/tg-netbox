@@ -1,9 +1,9 @@
 {% include 'templates/juniper-global.j2' %}
 
-{% set edge_interfaces = namespace([]) %}
+{% set edge_interfaces = namespace(edge_interfaces=[]) %}
 {% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
     {% if interface.mode == "access" %}
-        {% set edge_interfaces = edge_interfaces + [interface] %}
+        {% set edge_interfaces.edge_interfaces = edge_interfaces.edge_interfaces + [interface] %}
     {% endif %}
 {% endfor %}
 
@@ -144,15 +144,15 @@ ethernet-switching-options {
     }
 }
 
-{% set vlans = namespace([]) %}
+{% set vlans = namespace(vlans=[]) %}
 {% for interface in interfaces %}
     {% for vlan in interface.tagged_vlans.all() %}
         {% if vlan not in vlans %}
-            {% set vlans = vlans + [vlan] %}
+            {% set vlans.vlans = vlans.vlans + [vlan] %}
         {% endif %}
     {% endfor %}
     {% if interface.untagged_vlan and interface.untagged_vlan not in vlans %}
-        {% set vlans = vlans + [interface.untagged_vlan] %}
+        {% set vlans.vlans = vlans.vlans + [interface.untagged_vlan] %}
     {% endif %}
 {% endfor %}
 ethernet-switching-options {
