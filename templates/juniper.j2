@@ -3,7 +3,7 @@
 {% set edge_interfaces = [] %}
 {% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
     {% if interface.mode == "access" %}
-        {% do edge_interfaces.append(interface) %}
+        {% edge_interfaces = edge_interfaces + [interface] %}
     {% endif %}
 {% endfor %}
 
@@ -148,11 +148,11 @@ ethernet-switching-options {
 {% for interface in interfaces %}
     {% for vlan in interface.tagged_vlans.all() %}
         {% if vlan not in vlans %}
-            {% do vlans.append(vlan) %}
+            {% set vlans = vlans + [vlan] %}
         {% endif %}
     {% endfor %}
     {% if interface.untagged_vlan and interface.untagged_vlan not in vlans %}
-        {% do vlans.append(interface.untagged_vlan) %}
+        {% set vlans = vlans + [interface.untagged_vlan] %}
     {% endif %}
 {% endfor %}
 ethernet-switching-options {
