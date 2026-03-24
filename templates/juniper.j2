@@ -1,16 +1,5 @@
 {% include 'templates/juniper-global.j2' %}
 
-{% set interfaces = [] %}
-{% if device.virtual_chassis %}
-    {% for vc_member in dcim.VirtualChassis.objects.get(id=device.virtual_chassis.id).members.all() %}
-        {% for vc_interfaces in dcim.Interface.objects.filter(device_id=vc_member.id) %}
-            {% do interfaces.append(vc_interfaces) %}
-        {% endfor %}
-    {% endfor %}
-{% else %}
-    {% set interfaces = device.interfaces.filter() %}
-{% endif %}
-
 {% set edge_interfaces = [] %}
 {% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
     {% if interface.mode == "access" %}
