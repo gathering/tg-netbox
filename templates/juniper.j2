@@ -3,7 +3,7 @@
 {% set edge_interfaces = [] %}
 {% for interface in interfaces if interface.type not in ["virtual", "lag"] %}
     {% if interface.mode == "access" %}
-        {% edge_interfaces = edge_interfaces + [interface] %}
+        {% set edge_interfaces = edge_interfaces + [interface] %}
     {% endif %}
 {% endfor %}
 
