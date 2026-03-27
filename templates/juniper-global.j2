@@ -62,7 +62,7 @@ system {
         user * {
             any emergency;
         }
-        host log.{{ domainName }} {
+        host {{ syslogServer }} {
             any warning;
             authorization info;
             daemon warning;
