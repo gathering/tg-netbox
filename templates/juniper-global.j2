@@ -65,14 +65,10 @@ system {
         host {{ syslogServer }} {
             any warning;
             authorization info;
-            daemon warning;
-            user warning;
             change-log any;
             interactive-commands any;
-            match "!(.*License.*)";
             allow-duplicates;
-            facility-override local7;
-            explicit-priority;
+			structured-data;
         }
         /* Oxidized syslog */
 {% for server in oxidizedServers %}
