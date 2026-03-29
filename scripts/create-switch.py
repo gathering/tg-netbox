@@ -225,7 +225,8 @@ class CreateSwitch(Script):
                 response = requests.post(url, headers=headers, verify=True)
                 if response.status_code == 201:
                     job_data = response.json()
-                    self.log_info(f"Job successfully launched! Job ID: {job_data['id']} ({job_data})")
+                    self.log_info(f"Job successfully launched! Job ID: {job_data['id']} Watch <a href=\"{AWX_URL}/#/jobs/playbook/{job_data['id']}/output\">this</a>.")
+                    self.log_info(f"")
                 else:
                     self.log_error(f"Failed to launch job. Status: {response.status_code}")
                     self.log_error(response.text)
