@@ -1,4 +1,6 @@
+import os
 import json
+import requests
 
 from extras.scripts import *
 from django.contrib.contenttypes.models import ContentType
@@ -93,6 +95,9 @@ UPLINK_SUPPORT_MATRIX = {
     InterfaceTypeChoices.TYPE_1GE_FIXED: [InterfaceTypeChoices.TYPE_2GE_FIXED, InterfaceTypeChoices.TYPE_1GE_FIXED]
 }
 
+AWX_URL = os.getenv('AWX_URL', None)
+AWX_TOKEN = os.getenv('AWX_TOKEN', None)
+AWX_TEMPLATE_ID = os.getenv('AWX_TEMPLATE_ID', None)
 
 def generatePrefix(prefix, length):
     firstPrefix = prefix.get_first_available_prefix()
@@ -159,6 +164,11 @@ class CreateSwitch(Script):
         }
     )
 
+    trigger_awx_playbook = BooleanVar(
+        description="Trigger AWX Playbook for syncing AVD after success",
+        default=True,
+    )
+
     def run(self, data, commit):
         self.run_tests()
 
@@ -204,6 +214,24 @@ class CreateSwitch(Script):
             self.log_success(f"🔗 v6 Prefix:  <a href=\"{v6_prefix.get_absolute_url()}\">{v6_prefix}</a>")
             self.log_success(f"🔗 v4 Prefix:  <a href=\"{v4_prefix.get_absolute_url()}\">{v4_prefix}</a>")
             self.log_success(f"🔗 VLAN:       <a href=\"{vlan.get_absolute_url()}\">{vlan}</a>")
+
+        if data['trigger_awx_playbook'] and AWX_URL and AWX_TEMPLATE_ID and AWX_TOKEN:
+            try:
+                url = f"{AWX_URL}/api/v2/job_templates/{AWX_TEMPLATE_ID}/launch/"
+                headers = {
+                    "Authorization": f"Bearer {AWX_TOKEN}",
+                    "Content-Type": "application/json"
+                }
+                response = requests.post(url, headers=headers, verify=True)
+                if response.status_code == 201:
+                    job_data = response.json()
+                    self.log_info(f"Job successfully launched! Job ID: {job_data['id']} ({job_data})")
+                else:
+                    self.log_error(f"Failed to launch job. Status: {response.status_code}")
+                    self.log_error(response.text)
+            except Exception as e:
+                self.log_info(f"Failed to start AWX playbook: {e}")
+
         self.log_success(f"⚠️ <strong>️Fabric config must be deployed before switch can be fapped.</strong>")
         return json.dumps(
             {
