@@ -61,8 +61,8 @@ FABRIC_V4_CLIENTS_PREFIX = lambda: Prefix.objects.get(prefix__family=4, prefix='
 FABRIC_V6_CLIENTS_PREFIX = lambda: Prefix.objects.get(prefix__family=6, prefix='2a06:5844:e::/48', vrf=FABRIC_CLIENTS_VRF())
 
 # Switch mgmt allocates from here
-FABRIC_V4_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=4, prefix='185.110.149.0/24', vrf=FABRIC_CLIENTS_VRF())
-FABRIC_V6_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=6, prefix='2a06:5841:f::/64', vrf=FABRIC_CLIENTS_VRF())
+FABRIC_V4_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=4, prefix='185.110.149.0/24', vrf=FABRIC_INET_VRF())
+FABRIC_V6_JUNIPER_MGMT_PREFIX = lambda: Prefix.objects.get(prefix__family=6, prefix='2a06:5841:f::/64', vrf=FABRIC_INET_VRF())
 
 # Don't default if the defaults don't exist
 try:
