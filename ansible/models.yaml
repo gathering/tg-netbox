@@ -1,4 +1,5 @@
 models:
+  - CCS-720XP-48Y6-2F
   - CCS-720XP-48ZC2-2F
   - CCS-720XP-96ZC2-4F
   - CCS-720DP-24ZS-2F
@@ -12,3 +13,4 @@ models:
   - AP-C360
   - EX3300-48P
   - EX2200-48T-4G
+  - UCS-C240-M4S

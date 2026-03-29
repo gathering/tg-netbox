@@ -21,6 +21,8 @@ locals {
     { name = "Linknet" },
     { name = "Loopback" },
     { name = "Servers" },
+    { name = "Arista OOB mgmt" },
+    { name = "Arista Inband mgmt" }
   ]
   as_nubmers = [
     { asn = 21067, rir = netbox_rir.kandu, description = "KANDU" },
@@ -31,7 +33,6 @@ locals {
   ]
   aggregates = [
     { prefix = "10.0.0.0/8", description = "RFC1918", rir = netbox_rir.tg25 },
-    { prefix = "88.92.0.0/18", description = "Telenor", rir = netbox_rir.telenor },
     { prefix = "185.110.148.0/22", description = "KANDU v4", rir = netbox_rir.kandu },
     { prefix = "2a06:5840::/29", description = "KANDU v6", rir = netbox_rir.kandu },
     { prefix = "193.212.22.0/30", description = "Telenor v4 linknet", rir = netbox_rir.telenor },
@@ -41,7 +42,7 @@ locals {
     { name = "default", description = "For underlay i fabricen" },
     { name = "CLIENTS", description = "Nett som lever i fabricen (v4 NAT)" },
     { name = "INET", description = "Nett som lever i fabricen - ingen v4 NAT" },
-    { name = "MGMT", description = "Arista Management, Terminert på Internett ruter" },
+    { name = "OOB_MGMT", description = "Arista Management, Terminert på Internett ruter" },
   ]
   prefixes = [
     { description = "RFC1918", prefix = "10.0.0.0/8", status = "container", role_id = null },
@@ -53,8 +54,17 @@ locals {
     { description = "Linknets v6", prefix = "2a06:5841:f:100::/56", status = "container", role_id = netbox_ipam_role.roles["Linknet"].id },
     { description = "Loopbacks v4", prefix = "185.110.148.32/27", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
     { description = "Loopbacks v6", prefix = "2a06:5841:f:200::/64", status = "container", role_id = netbox_ipam_role.roles["Loopback"].id },
-    { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.juniper-mgmt.id },
-    { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.juniper-mgmt.id },
+    { description = "Juniper mgmt v4", prefix = "185.110.149.0/24", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.vlans["juniper-mgmt"].id },
+    { description = "Juniper mgmt v6", prefix = "2a06:5841:f::/64", status = "active", role_id = netbox_ipam_role.roles["Infrastruktur"].id, vrf_id = netbox_vrf.vrfs["CLIENTS"].id , vlan_id = netbox_vlan.vlans["juniper-mgmt"].id },
+    { description = "Arista Inband mgmt v4", prefix = "185.110.148.208/28", status = "active", role_id = netbox_ipam_role.roles["Arista Inband mgmt"].id, vrf_id = netbox_vrf.vrfs["INET"].id , vlan_id = netbox_vlan.vlans["arista-inband-mgmt"].id },
+    { description = "Arista Inband mgmt v6", prefix = "2a06:5841:f:2::/64", status = "active", role_id = netbox_ipam_role.roles["Arista Inband mgmt"].id, vrf_id = netbox_vrf.vrfs["INET"].id , vlan_id = netbox_vlan.vlans["arista-inband-mgmt"].id },
+    { description = "Arista OOB mgmt v4", prefix = "185.110.148.64/26", status = "active", role_id = netbox_ipam_role.roles["Arista OOB mgmt"].id, vrf_id = netbox_vrf.vrfs["OOB_MGMT"].id , vlan_id = netbox_vlan.vlans["arista-oob-mgmt"].id },
+    { description = "Arista OOB mgmt v6", prefix = "2a06:5841:f:1::/64", status = "active", role_id = netbox_ipam_role.roles["Arista OOB mgmt"].id, vrf_id = netbox_vrf.vrfs["OOB_MGMT"].id , vlan_id = netbox_vlan.vlans["arista-oob-mgmt"].id },
+  ]
+  vlans = [
+    { name = "juniper-mgmt", vid = 10, role_id = netbox_ipam_role.roles["Juniper mgmt"].id, status = "active" },
+    { name = "arista-inband-mgmt", vid = 668, role_id = netbox_ipam_role.roles["Arista Inband mgmt"].id, status = "active" },
+    { name = "arista-oob-mgmt", vid = 666, role_id = netbox_ipam_role.roles["Arista OOB mgmt"].id, status = "active" },
   ]
 }
 
@@ -82,6 +92,15 @@ resource "netbox_vrf" "vrfs" {
   for_each    = { for vrf in local.vrfs : tostring(vrf.name) => vrf }
   name        = each.value.name
   description = each.value.description
+  tags        = try(each.value.tags, [])
+}
+
+resource "netbox_vlan" "vlans" {
+  for_each = { for vlan in local.vlans : tostring(vlan.name) => vlan }
+  name        = each.value.name
+  vid         = each.value.vid
+  role_id     = each.value.role_id
+  status      = each.value.status
 }
 
 resource "netbox_prefix" "prefixes" {
@@ -99,11 +118,4 @@ resource "netbox_vlan_group" "Client_VLANs" {
   name    = "Client VLANs"
   slug    = "client-vlans"
   vid_ranges = [[200, 4094]]
-}
-
-resource "netbox_vlan" "juniper-mgmt" {
-  name        = "juniper-mgmt"
-  vid         = 10
-  role_id     = netbox_ipam_role.roles["Juniper mgmt"].id
-  status      = "active"
 }

@@ -42,7 +42,8 @@ locals {
      { name = "lc-lc-patch",slug = "lc-lc-patch",color = "ff5722",description = "LC to LC patch cable" },
      { name = "lc-sc-patch",slug = "lc-sc-patch",color = "00ffff",description = "LC to SC patch cable" },
      { name = "tg-fiber",slug = "tg-fiber",color = "ffeb3b",description = "Permanently installed fiber" },
-     { name = "MPO", slug = "mpo", color = "0000ff", description = "MPO fiber" }
+     { name = "MPO", slug = "mpo", color = "0000ff", description = "MPO fiber" },
+     { name = "no-export", slug = "no-export", color = "000000", description = "Add this to items you don't want to export to AVD" },
   ]
 }
 
