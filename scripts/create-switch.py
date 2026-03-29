@@ -95,9 +95,9 @@ UPLINK_SUPPORT_MATRIX = {
     InterfaceTypeChoices.TYPE_1GE_FIXED: [InterfaceTypeChoices.TYPE_2GE_FIXED, InterfaceTypeChoices.TYPE_1GE_FIXED]
 }
 
-AWX_URL = os.getenv('AWX_URL', None)
-AWX_TOKEN = os.getenv('AWX_TOKEN', None)
-AWX_TEMPLATE_ID = os.getenv('AWX_TEMPLATE_ID', None)
+AWX_URL = os.getenv('NETBOX_AWX_URL', None)
+AWX_TOKEN = os.getenv('NETBOX_AWX_TOKEN', None)
+AWX_TEMPLATE_ID = os.getenv('NETBOX_AWX_TEMPLATE_ID', None)
 
 def generatePrefix(prefix, length):
     firstPrefix = prefix.get_first_available_prefix()
