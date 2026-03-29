@@ -27,7 +27,7 @@ from extras.validators import CustomValidator
 # ✅ Utskutt distro (nice to have)
 
 DEFAULT_SWITCH_NAME = "e1-changemyname"
-DEFAULT_TG_DNS_SUFFIX = "tg25.tg.no"
+DEFAULT_TG_DNS_SUFFIX = "tg26.tg.no"
 
 DEVICE_ROLE_ACCESS = "access-switch"
 DEVICE_ROLE_DISTRO = "distro"
@@ -38,7 +38,7 @@ JUNIPER_CONFIG_TEMPLATE_NAME = "juniper"
 
 UPLINK_PORTS = {
     'EX2200-48T-4G': ["ge-0/0/44", "ge-0/0/45", "ge-0/0/46", "ge-0/0/47"],
-    'EX3300-48P': ["xe-0/1/0", "xe-0/1/1"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
+    'EX3300-48P': ["xe-0/1/0", "xe-0/1/1", "ge-0/0/44", "ge-0/0/45", "ge-0/0/46", "ge-0/0/47"],  # xe-0/1/2 and xe-0/1/3 can be used for clients
 }
 
 # !! !! !! These objects have to exist in Netbox for the script to work !! !! !!
