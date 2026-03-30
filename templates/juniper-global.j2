@@ -68,7 +68,8 @@ system {
             change-log any;
             interactive-commands any;
             allow-duplicates;
-			structured-data;
+            explicit-priority;
+	    structured-data;
         }
         /* Oxidized syslog */
 {% for server in oxidizedServers %}
