@@ -183,6 +183,7 @@ class CreateSwitch(Script):
 
         # workaround for Netbox discussion #18229 - if str we assume script is called from the API
         if type(data['device_type']).__name__ == "str":
+            self.log_info("input element is string, assuming api")
             device_type = DeviceType.objects.get(model=data['device_type'])
             device_role = DeviceRole.objects.get(name=data['device_role'])
             uplink_type = [InterfaceTypeChoices.TYPE_1GE_FIXED]
@@ -192,6 +193,8 @@ class CreateSwitch(Script):
 
             ifs = data['destination_interfaces'].split(",")
             destination_interfaces = Interface.objects.filter(device_id=destination_device_a.id, name__in=ifs)
+        else:
+            self.log_info("not api request")
 
         self.log_debug("")
         switch = self.create_switch(switch_name, device_type, device_role, destination_device_a)
