@@ -288,7 +288,7 @@ class CreateSwitch(Script):
 
         if switch.role.slug == DEVICE_ROLE_ACCESS:
             ## Add vlan upstream if not connected to leaf
-            if uplink_device_a.role.slug != DEVICE_ROLE_LEAF:
+            if uplink_device_a.role.slug != DEVICE_ROLE_LEAF and uplink_device_a.role.slug != DEVICE_ROLE_L2LEAF:
                 lag_on_uplink_device = Interface.objects.get(device=ae_device, name="ae0")
                 lag_on_uplink_device.tagged_vlans.add(vlan.id)
 
