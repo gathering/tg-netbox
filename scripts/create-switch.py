@@ -35,6 +35,7 @@ DEVICE_ROLE_ACCESS = "access-switch"
 DEVICE_ROLE_DISTRO = "distro"
 DEVICE_ROLE_LEAF = "leaf"
 DEVICE_ROLE_UTSKUTT_DISTRO = "utskutt-distro"
+DEVICE_ROLE_L2LEAF = "l2-leaf"
 
 JUNIPER_CONFIG_TEMPLATE_NAME = "juniper"
 
@@ -141,7 +142,7 @@ class CreateSwitch(Script):
         required=True,
         model=Device,
         query_params={
-            'role': [DEVICE_ROLE_LEAF, DEVICE_ROLE_DISTRO, DEVICE_ROLE_UTSKUTT_DISTRO],
+            'role': [DEVICE_ROLE_LEAF, DEVICE_ROLE_DISTRO, DEVICE_ROLE_UTSKUTT_DISTRO, DEVICE_ROLE_L2LEAF],
         },
         default=DEFAULT_UPLINK_SWITCH,
     )
