@@ -68,7 +68,7 @@ def generatePrefix(prefix, length):
 
 class CreateLeafAccess(Script):
     class Meta:
-        name = "Create Leaf Access"
+        name = "Create Access ports on Arista Leaf Switch"
         description = "Create new access vlan and add to ports on Arista leaf switch"
         commit_default = True
         fieldsets = ""
