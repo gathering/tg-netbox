@@ -187,7 +187,7 @@ ethernet-switching-options {
             examine-dhcpv6;
             inactive: neighbor-discovery-inspection;
             ip-source-guard;
-            ipv6-source-guard;
+            inactive: ipv6-source-guard; {# stops dhcpv6 (/ ipv6?) from working #}
             dhcp-option82 {
                 circuit-id {
                     use-vlan-id;
