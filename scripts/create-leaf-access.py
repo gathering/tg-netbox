@@ -23,11 +23,14 @@ from extras.validators import CustomValidator
 
 DEFAULT_TG_DNS_SUFFIX = "tg26.tg.no"
 
-UPLINK_TYPES = [
-    InterfaceTypeChoices.TYPE_1GE_FIXED,
-    InterfaceTypeChoices.TYPE_2GE_FIXED,
-    InterfaceTypeChoices.TYPE_5GE_FIXED,
-]
+UPLINK_TYPES = (
+    (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G RJ45'),
+    (InterfaceTypeChoices.TYPE_10GE_SFP_PLUS, '10G SFP+'),
+    (InterfaceTypeChoices.TYPE_25GE_SFP28, '25G SFP28'),
+    (InterfaceTypeChoices.TYPE_1GE_FIXED, '1G RJ45'),
+    (InterfaceTypeChoices.TYPE_2GE_FIXED, '2.5G RJ45'),
+    (InterfaceTypeChoices.TYPE_5GE_FIXED, '5G RJ45')
+)
 
 # Device role slug for leaf switches
 DEVICE_ROLE_LEAF = "leaf"
@@ -54,7 +57,7 @@ FABRIC_V6_LEAF_CLIENTS_PREFIX = lambda: Prefix.objects.get(prefix__family=6, pre
 
 # Don't default if the defaults don't exist
 try:
-    DEFAULT_SWITCH_NAME = "d1-noc"
+    DEFAULT_SWITCH_NAME = Device.objects.get(name='d1-noc')
 except:
     DEFAULT_SWITCH_NAME = None
 
@@ -66,7 +69,7 @@ def generatePrefix(prefix, length):
 class CreateLeafAccess(Script):
     class Meta:
         name = "Create Leaf Access"
-        description = "Create new access vlan and add to ports on leaf switch"
+        description = "Create new access vlan and add to ports on Arista leaf switch"
         commit_default = True
         fieldsets = ""
         scheduling_enabled = False
@@ -81,13 +84,21 @@ class CreateLeafAccess(Script):
         default=DEFAULT_SWITCH_NAME,
     )
 
+    uplink_type = MultiChoiceVar(
+        label='Uplink Type',
+        required=True,
+        description="What type of interface should be configured to access port",
+        choices=UPLINK_TYPES,
+        default=[InterfaceTypeChoices.TYPE_1GE_FIXED, InterfaceTypeChoices.TYPE_2GE_FIXED, InterfaceTypeChoices.TYPE_5GE_FIXED]
+    )
+
     interfaces = MultiObjectVar(
         description="Interface(s)",
         model=Interface,
         query_params={
             'device_id': '$switch_name',
             'occupied': False,
-            'type': '$UPLINK_TYPES',
+            'type': '$uplink_type'
         }
     )
 
@@ -103,13 +114,23 @@ class CreateLeafAccess(Script):
         v6_prefix = None
         v4_prefix = None
 
-        vlan = self.create_vlan(switch_name)
-        v4_prefix, v6_prefix = self.allocate_prefixes(vlan)
+        vlan, vlan_is_new = self.create_vlan(switch_name)
+        if vlan_is_new:
+            v4_prefix, v6_prefix = self.allocate_prefixes(vlan)
+        else:
+            self.log_info(f"Skipping prefix allocation - VLAN already has prefixes assigned")
+        
         self.set_access_ports(switch_name, vlan, interfaces)
 
-        self.log_success(f"🔗 v6 Prefix:  <a href=\"{v6_prefix.get_absolute_url()}\">{v6_prefix}</a>")
-        self.log_success(f"🔗 v4 Prefix:  <a href=\"{v4_prefix.get_absolute_url()}\">{v4_prefix}</a>")
+        if v6_prefix is not None:
+            self.log_success(f"🔗 v6 Prefix:  <a href=\"{v6_prefix.get_absolute_url()}\">{v6_prefix}</a>")
+        if v4_prefix is not None:
+            self.log_success(f"🔗 v4 Prefix:  <a href=\"{v4_prefix.get_absolute_url()}\">{v4_prefix}</a>")
         self.log_success(f"🔗 VLAN:       <a href=\"{vlan.get_absolute_url()}\">{vlan}</a>")
+        interfaces_created = ""
+        for interface in interfaces:
+            interfaces_created += f"<a href=\"{interface.get_absolute_url()}\">{interface}</a> "
+        self.log_success(f"✅ Successfully {'created' if vlan_is_new else 'applied configuration to'} leaf access on <a href=\"{switch_name.get_absolute_url()}\">{switch_name}</a> {interfaces_created}")
         
         return json.dumps(
             {
@@ -137,6 +158,17 @@ class CreateLeafAccess(Script):
         return v4_prefix, v6_prefix
 
     def create_vlan(self, switch):
+        # Check if VLAN already exists for this switch
+        try:
+            vlan = VLAN.objects.get(
+                name=switch.name,
+                group=FABRIC_LEAF_VLAN_GROUP()
+            )
+            self.log_info(f"VLAN already exists: {vlan.name} (VID: {vlan.vid})")
+            return vlan, False
+        except VLAN.DoesNotExist:
+            pass
+        
         vid = FABRIC_LEAF_VLAN_GROUP().get_next_available_vid()
         vlan = VLAN.objects.create(
             name=switch.name,
@@ -146,15 +178,8 @@ class CreateLeafAccess(Script):
         )
         vlan.save()
         
-        # Add tags after saving
-        try:
-            tag = Tag.objects.get(slug='dhcp-client')
-            vlan.tags.add(tag)
-        except Tag.DoesNotExist:
-            self.log_warning(f"Tag 'dhcp-client' does not exist")
-        
         self.log_info("Created VLAN")
-        return vlan
+        return vlan, True
 
     def set_access_ports(self, switch, vlan, interfaces):
         if len(interfaces) == 0:
