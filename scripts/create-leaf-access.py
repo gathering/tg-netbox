@@ -1,27 +1,12 @@
-import json
-
 from extras.scripts import *
 
-from dcim.models import Device, DeviceType, DeviceRole, Interface
+from dcim.models import Device, DeviceType, Interface
 from dcim.choices import InterfaceTypeChoices
 
-from ipam.models import VLANGroup, VLAN, Role, Prefix, IPAddress, VRF
+from ipam.models import VLANGroup, VLAN, Role, Prefix, VRF
 from ipam.choices import PrefixStatusChoices
 
-from extras.models import ConfigTemplate, Tag
-
 from utilities.exceptions import AbortScript
-
-from extras.validators import CustomValidator
-
-## Features
-# ✅ Edge switch on Ringen
-# ✅ Edge on "utskutt distro"
-# ✅ Edge switch on distro leaf
-# ✅ Edge switch on leaf-pair
-# ✅ Utskutt distro (nice to have)
-
-DEFAULT_TG_DNS_SUFFIX = "tg26.tg.no"
 
 UPLINK_TYPES = (
     (InterfaceTypeChoices.TYPE_10GE_FIXED, '10G RJ45'),
@@ -32,7 +17,7 @@ UPLINK_TYPES = (
     (InterfaceTypeChoices.TYPE_5GE_FIXED, '5G RJ45')
 )
 
-# Device role slug for leaf switches
+# Device role slug for leaf and l2-leaf switches
 DEVICE_ROLE_LEAF = "leaf"
 DEVICE_ROLE_L2LEAF = "l2-leaf"
 
@@ -47,9 +32,6 @@ FABRIC_CLIENTS_ROLE = lambda: Role.objects.get(slug='clients')
 
 # VRF for fabric clients
 FABRIC_CLIENTS_VRF = lambda: VRF.objects.get(name='CLIENTS')
-
-# VRF for internet clients on the fabric
-FABRIC_INET_VRF = lambda: VRF.objects.get(name='INET')
 
 # Client networks allocated from here
 FABRIC_V4_LEAF_CLIENTS_PREFIX = lambda: Prefix.objects.get(prefix__family=4, prefix='10.25.128.0/20', vrf=FABRIC_CLIENTS_VRF())
@@ -118,6 +100,8 @@ class CreateLeafAccess(Script):
         if vlan_is_new:
             v4_prefix, v6_prefix = self.allocate_prefixes(vlan)
         else:
+            v4_prefix = Prefix.objects.get(vlan=vlan, prefix__family=4)
+            v6_prefix = Prefix.objects.get(vlan=vlan, prefix__family=6)
             self.log_info(f"Skipping prefix allocation - VLAN already has prefixes assigned")
         
         self.set_access_ports(switch_name, vlan, interfaces)
@@ -131,13 +115,6 @@ class CreateLeafAccess(Script):
         for interface in interfaces:
             interfaces_created += f"<a href=\"{interface.get_absolute_url()}\">{interface}</a> "
         self.log_success(f"✅ Successfully {'created' if vlan_is_new else 'applied configuration to'} leaf access on <a href=\"{switch_name.get_absolute_url()}\">{switch_name}</a> {interfaces_created}")
-        
-        return json.dumps(
-            {
-                "network_v4": str(v4_prefix.prefix) if v4_prefix is not None else None,
-                "network_v6": str(v6_prefix.prefix) if v6_prefix is not None else None
-            }
-        )
 
     def allocate_prefixes(self, vlan):
         v6_prefix = Prefix.objects.create(
@@ -154,7 +131,7 @@ class CreateLeafAccess(Script):
             vrf=FABRIC_CLIENTS_VRF(),
             vlan=vlan
         )
-        self.log_info("Created network. Created new VLAN and assigned prefixes")
+        self.log_info(f"Created prefixes: v4={v4_prefix}, v6={v6_prefix}")
         return v4_prefix, v6_prefix
 
     def create_vlan(self, switch):
@@ -198,12 +175,12 @@ class CreateLeafAccess(Script):
     def test_dependencies(self):
         all_ok = True
         checks = [
+            (lambda: VLANGroup.objects.filter(slug=FABRIC_LEAF_VLAN_GROUP().slug).exists(),
+             f"VLAN Group \"{FABRIC_LEAF_VLAN_GROUP().slug}\" doesn't exist."),
             (lambda: Role.objects.filter(slug=FABRIC_CLIENTS_ROLE().slug).exists(),
              f"Role \"{FABRIC_CLIENTS_ROLE().slug}\" doesn't exist."),
             (lambda: VRF.objects.filter(name=FABRIC_CLIENTS_VRF().name).exists(),
              f"VRF \"{FABRIC_CLIENTS_VRF().name}\" doesn't exist."),
-            (lambda: VRF.objects.filter(name=FABRIC_INET_VRF().name).exists(),
-             f"VRF \"{FABRIC_INET_VRF().name}\" doesn't exist."),
         ]
 
         prefix_checks = [
