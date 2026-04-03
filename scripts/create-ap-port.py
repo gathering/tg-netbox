@@ -1,9 +1,7 @@
-import json
-
 from extras.scripts import *
 
-from dcim.models import Device, DeviceType, DeviceRole, Interface
-from dcim.choices import InterfaceTypeChoices, InterfaceModeChoices
+from dcim.models import Device, Interface, DeviceRole
+from dcim.choices import InterfaceTypeChoices
 
 from ipam.models import VLAN, Role, VRF
 
@@ -30,7 +28,7 @@ except:
 class CreateAccessPointPort(Script):
     class Meta:
         name = "Create Access Point port on Arista Leaf Switch"
-        description = ""
+        description = "Creates access point ports on Arista leaf switches with the correct VLANs and settings. Only creates the port and configures it."
         commit_default = True
         fieldsets = ""
         scheduling_enabled = False
@@ -104,11 +102,27 @@ class CreateAccessPointPort(Script):
 
     def test_dependencies(self):
         all_ok = True
-        vlan_names = ["WIFI-1337", "WIFI-1338", "WIFI-1339", "WIFI-1340", "WIFI-1341", "WIFI-LEGACY", "ap-mgmt"]
 
-        for vlan_name in vlan_names:
+        checks = [
+            (lambda: DeviceRole.objects.filter(slug=DEVICE_ROLE_LEAF).exists(),
+             f"Role \"{DEVICE_ROLE_LEAF}\" doesn't exist"),
+            (lambda: DeviceRole.objects.filter(slug=DEVICE_ROLE_L2LEAF).exists(),
+             f"Role \"{DEVICE_ROLE_L2LEAF}\" doesn't exist."),
+        ]
+
+        vlan_checks = ["WIFI-1337", "WIFI-1338", "WIFI-1339", "WIFI-1340", "WIFI-1341", "WIFI-LEGACY", "ap-mgmt"]
+        for vlan_name in vlan_checks:
+            checks.append((
+                lambda v=vlan_name: VLAN.objects.filter(name=v).exists(),
+                f"VLAN \"{vlan_name}\" doesn't exist."
+            ))
             if not VLAN.objects.filter(name=vlan_name).exists():
                 self.log_failure(f"VLAN '{vlan_name}' doesn't exist.")
+                all_ok = False
+
+        for check_fn, error_msg in checks:
+            if not check_fn():
+                self.log_failure(error_msg)
                 all_ok = False
         
         if not all_ok:
